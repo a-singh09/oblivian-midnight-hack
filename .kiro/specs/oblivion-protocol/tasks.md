@@ -6,7 +6,7 @@ This implementation plan converts the Oblivion Protocol design into a series of 
 
 ## Task List
 
-- [ ] 1. Set up project structure and development environment
+- [x] 1. Set up project structure and development environment
 
   - Create directory structure for contracts, backend, SDK, and frontend components
   - Set up Docker environment with PostgreSQL and Midnight proof server
@@ -16,8 +16,10 @@ This implementation plan converts the Oblivion Protocol design into a series of 
 
 - [ ] 2. Implement Midnight smart contracts
 
+    - Check docs folder for updated docs
   - [ ] 2.1 Create DataCommitment.compact contract
 
+    - Check docs folder for updated docs
     - Write Compact contract with proper pragma and imports
     - Implement ledger state for commitments map and counter
     - Define CommitmentRecord struct with all required fields
@@ -28,6 +30,7 @@ This implementation plan converts the Oblivion Protocol design into a series of 
 
   - [ ] 2.2 Create ZKDeletionVerifier.compact contract
 
+    - Check docs folder for updated docs
     - Write Compact contract for deletion proof verification
     - Implement ledger state for verified deletions
     - Define VerificationRecord struct for proof metadata
@@ -43,9 +46,9 @@ This implementation plan converts the Oblivion Protocol design into a series of 
     - _Requirements: 4.1, 6.1_
 
 - [ ] 3. Build backend storage and encryption system
-
   - [ ] 3.1 Implement StorageManager class
 
+    - Check docs folder for updated docs
     - Create PostgreSQL connection and schema initialization
     - Implement AES-256-CBC encryption with random IVs
     - Write storeData method with commitment hash generation
@@ -56,6 +59,7 @@ This implementation plan converts the Oblivion Protocol design into a series of 
 
   - [ ] 3.2 Create MidnightClient wrapper
 
+    - Check docs folder for updated docs
     - Set up connection to Midnight testnet and proof server
     - Implement wallet management with seed phrase loading
     - Create registerCommitment method for blockchain transactions
@@ -74,6 +78,7 @@ This implementation plan converts the Oblivion Protocol design into a series of 
 
   - [ ] 4.1 Create Express server with core endpoints
 
+    - Check docs folder for updated docs
     - Set up Express application with CORS and JSON middleware
     - Initialize StorageManager and MidnightClient connections
     - Implement /api/register-data endpoint for SDK integration
@@ -84,6 +89,7 @@ This implementation plan converts the Oblivion Protocol design into a series of 
 
   - [ ] 4.2 Add real-time WebSocket support
 
+    - Check docs folder for updated docs
     - Implement WebSocket server for real-time updates
     - Create user subscription management for data status changes
     - Add progress tracking for deletion operations
@@ -92,6 +98,7 @@ This implementation plan converts the Oblivion Protocol design into a series of 
 
   - [ ] 4.3 Implement webhook system for companies
 
+    - Check docs folder for updated docs
     - Create webhook endpoint registration for companies
     - Add webhook delivery system with retry logic (3 attempts)
     - Implement 30-second timeout handling
@@ -108,6 +115,7 @@ This implementation plan converts the Oblivion Protocol design into a series of 
 
   - [ ] 5.1 Create OblivionSDK class
 
+    - Check docs folder for updated docs
     - Initialize SDK with API key and service name configuration
     - Implement registerUserData method with automatic encryption
     - Create handleDeletion method for complete deletion flow
@@ -117,6 +125,7 @@ This implementation plan converts the Oblivion Protocol design into a series of 
 
   - [ ] 5.2 Package SDK for npm distribution
 
+    - Check docs folder for updated docs
     - Configure TypeScript compilation and type definitions
     - Create comprehensive README with integration examples
     - Set up package.json with proper dependencies and metadata
@@ -133,6 +142,7 @@ This implementation plan converts the Oblivion Protocol design into a series of 
 
   - [ ] 6.1 Create React application structure
 
+    - Check docs folder for updated docs
     - Set up React TypeScript project with TailwindCSS
     - Configure routing and state management
     - Create base layout and navigation components
@@ -141,6 +151,7 @@ This implementation plan converts the Oblivion Protocol design into a series of 
 
   - [ ] 6.2 Implement Dashboard component
 
+    - Check docs folder for updated docs
     - Create main dashboard showing user's data footprint
     - Display list of companies with data categories and timestamps
     - Show deletion status for each data record
@@ -149,6 +160,7 @@ This implementation plan converts the Oblivion Protocol design into a series of 
 
   - [ ] 6.3 Build deletion functionality
 
+    - Check docs folder for updated docs
     - Create delete-all button with confirmation dialog
     - Implement real-time progress tracking during deletion
     - Display blockchain proof links upon completion
@@ -157,6 +169,7 @@ This implementation plan converts the Oblivion Protocol design into a series of 
 
   - [ ] 6.4 Add real-time updates
 
+    - Check docs folder for updated docs
     - Implement WebSocket connection for live data updates
     - Create notification system for status changes
     - Add progress indicators for blockchain operations
@@ -173,6 +186,7 @@ This implementation plan converts the Oblivion Protocol design into a series of 
 
   - [ ] 7.1 Create contract deployment scripts
 
+    - Check docs folder for updated docs
     - Write TypeScript deployment script using Midnight SDK
     - Compile Compact contracts to JSON artifacts
     - Deploy contracts to Midnight testnet with proper configuration
@@ -181,6 +195,7 @@ This implementation plan converts the Oblivion Protocol design into a series of 
 
   - [ ] 7.2 Set up proof server integration
 
+    - Check docs folder for updated docs
     - Configure Docker container for Midnight proof server
     - Test ZK proof generation with sample data
     - Verify proof server connectivity from backend
@@ -196,6 +211,7 @@ This implementation plan converts the Oblivion Protocol design into a series of 
 
   - [ ] 8.1 Test complete user journey
 
+    - Check docs folder for updated docs
     - Create test scenario with multiple companies storing user data
     - Verify data registration appears in user dashboard
     - Test one-click deletion flow with blockchain proof generation
@@ -204,6 +220,7 @@ This implementation plan converts the Oblivion Protocol design into a series of 
 
   - [ ] 8.2 Validate SDK integration
 
+    - Check docs folder for updated docs
     - Test SDK with sample company application
     - Verify automatic data registration and commitment creation
     - Test webhook delivery and deletion handling
@@ -221,6 +238,7 @@ This implementation plan converts the Oblivion Protocol design into a series of 
 
   - [ ] 9.1 Create comprehensive documentation
 
+    - Check docs folder for updated docs
     - Write API documentation with OpenAPI specification
     - Create developer integration guide for companies
     - Document deployment procedures and configuration
@@ -229,6 +247,7 @@ This implementation plan converts the Oblivion Protocol design into a series of 
 
   - [ ] 9.2 Prepare production deployment
 
+    - Check docs folder for updated docs
     - Configure Docker Compose for production environment
     - Set up environment variables and secrets management
     - Create database migration scripts

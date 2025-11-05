@@ -1,0 +1,85 @@
+version: "3.8"
+
+services:
+  # PostgreSQL database for encrypted data storage
+  postgres:
+    image: postgres:15-alpine
+    container_name: oblivion-postgres
+    environment:
+      POSTGRES_DB: oblivion_db
+      POSTGRES_USER: oblivion
+      POSTGRES_PASSWORD: password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - oblivion-network
+
+  # Midnight proof server for ZK-SNARK generation
+  proof-server:
+    image: midnight/proof-server:latest
+    container_name: oblivion-proof-server
+    ports:
+      - "6300:6300"
+    environment:
+      - PROOF_SERVER_PORT=6300
+      - LOG_LEVEL=info
+    volumes:
+      - proof_data:/app/data
+    networks:
+      - oblivion-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6300/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Backend API server (for development)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: oblivion-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://oblivion:password@postgres:5432/oblivion_db
+      - PROOF_SERVER_URL=http://proof-server:6300
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - postgres
+      - proof-server
+    networks:
+      - oblivion-network
+
+  # Dashboard frontend (for development)
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile.dev
+    container_name: oblivion-dashboard
+    ports:
+      - "3001:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:3000
+      - NEXT_PUBLIC_WS_URL=ws://localhost:3000
+    volumes:
+      - ./dashboard:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - oblivion-network
+
+volumes:
+  postgres_data:
+  proof_data:
+
+networks:
+  oblivion-network:
+    driver: bridge
