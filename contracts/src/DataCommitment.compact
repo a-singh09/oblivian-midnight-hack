@@ -1,0 +1,101 @@
+pragma language_version 0.18;
+
+import CompactStandardLibrary;
+
+// Commitment record structure for storing data metadata
+struct CommitmentRecord {
+  userDID: Opaque<"string">,
+  serviceProvider: Bytes<32>,
+  dataCategories: Vector<3, Opaque<"string">>,
+  createdAt: Uint<64>,
+  deleted: Boolean,
+  deletionProofHash: Bytes<32>
+}
+
+// Public ledger state - stored on blockchain
+export ledger commitments: Map<Bytes<32>, CommitmentRecord>;
+export ledger totalRecords: Counter;
+
+// Constructor to initialize the contract
+constructor() {
+  // Initialize with empty state - Map and Counter have default values
+}
+
+// Witness functions - private data that never goes on-chain
+witness getServiceKey(): Bytes<32>;
+witness getDeletionCertificate(hash: Bytes<32>): Bytes<32>;
+
+// Public circuit to register a new data commitment
+export circuit registerCommitment(
+  commitmentHash: Bytes<32>,
+  userDID: Opaque<"string">,
+  serviceProvider: Bytes<32>,
+  dataCategories: Vector<3, Opaque<"string">>
+): [] {
+  // Ensure commitment doesn't already exist
+  assert(!commitments.member(disclose(commitmentHash)), "Commitment already exists");
+  
+  // Get current timestamp (using counter as proxy for timestamp)
+  const currentTime = totalRecords.read() as Uint<64>;
+  
+  // Create new commitment record
+  const record = CommitmentRecord {
+    userDID: disclose(userDID),
+    serviceProvider: disclose(serviceProvider),
+    dataCategories: disclose(dataCategories),
+    createdAt: currentTime,
+    deleted: false,
+    deletionProofHash: pad(32, "")  // Empty hash initially
+  };
+  
+  // Store commitment on ledger
+  commitments.insert(disclose(commitmentHash), record);
+  totalRecords.increment(1);
+}
+
+// Public circuit to mark a commitment as deleted
+export circuit markAsDeleted(
+  commitmentHash: Bytes<32>,
+  deletionProofHash: Bytes<32>
+): [] {
+  // Ensure commitment exists
+  assert(commitments.member(disclose(commitmentHash)), "Commitment does not exist");
+  
+  // Get existing record
+  const existingRecord = commitments.lookup(disclose(commitmentHash));
+  
+  // Ensure not already deleted
+  assert(!existingRecord.deleted, "Commitment already deleted");
+  
+  // Verify authorization using service key witness
+  const serviceKey = getServiceKey();
+  assert(existingRecord.serviceProvider == serviceKey, "Unauthorized deletion attempt");
+  
+  // Verify deletion certificate
+  const deletionCert = getDeletionCertificate(commitmentHash);
+  assert(deletionCert == deletionProofHash, "Invalid deletion certificate");
+  
+  // Update record to mark as deleted
+  const updatedRecord = CommitmentRecord {
+    userDID: existingRecord.userDID,
+    serviceProvider: existingRecord.serviceProvider,
+    dataCategories: existingRecord.dataCategories,
+    createdAt: existingRecord.createdAt,
+    deleted: true,
+    deletionProofHash: disclose(deletionProofHash)
+  };
+  
+  // Update commitment on ledger
+  commitments.insert(disclose(commitmentHash), updatedRecord);
+}
+
+// Helper circuit to get commitment details (read-only)
+export circuit getCommitment(commitmentHash: Bytes<32>): CommitmentRecord {
+  assert(commitments.member(disclose(commitmentHash)), "Commitment does not exist");
+  return commitments.lookup(disclose(commitmentHash));
+}
+
+// Helper circuit to check if commitment exists
+export circuit hasCommitment(commitmentHash: Bytes<32>): Boolean {
+  return commitments.member(disclose(commitmentHash));
+}

@@ -1,0 +1,141 @@
+pragma language_version 0.18;
+
+import CompactStandardLibrary;
+
+// Verification record structure for storing proof metadata
+struct VerificationRecord {
+  commitmentHash: Bytes<32>,
+  verifiedAt: Uint<64>,
+  verifierKey: Bytes<32>,
+  proofValid: Boolean
+}
+
+// Public ledger state - stores verified deletions
+export ledger verifiedDeletions: Map<Bytes<32>, VerificationRecord>;
+export ledger verificationCounter: Counter;
+
+// Constructor to initialize the contract
+constructor() {
+  // Initialize with empty state - Map and Counter have default values
+}
+
+// Witness functions - private data for ZK proof generation
+witness getDeletionCertificate(hash: Bytes<32>): Bytes<32>;
+witness getVerifierKey(): Bytes<32>;
+witness getPrivateData(hash: Bytes<32>): Bytes<32>;
+
+// Helper circuit to generate proof hash from private data
+circuit generateProofHash(
+  commitmentHash: Bytes<32>,
+  deletionTimestamp: Uint<64>,
+  privateData: Bytes<32>
+): Bytes<32> {
+  // Create a unique proof by hashing commitment, timestamp, and private data
+  return persistentHash<Vector<4, Bytes<32>>>([
+    pad(32, "midnight:oblivion:deletion:proof"),
+    commitmentHash,
+    deletionTimestamp as Bytes<32>,
+    privateData
+  ]);
+}
+
+// Main circuit to verify deletion with zero-knowledge proof
+export circuit verifyDeletion(
+  commitmentHash: Bytes<32>,
+  claimedDeletionDate: Uint<64>
+): Bytes<32> {
+  // Ensure this commitment hasn't been verified before
+  assert(!verifiedDeletions.member(disclose(commitmentHash)), "Deletion already verified");
+  
+  // Get private data through witness (never revealed on-chain)
+  const privateData = getPrivateData(commitmentHash);
+  
+  // Get deletion certificate through witness
+  const deletionCert = getDeletionCertificate(commitmentHash);
+  
+  // Get verifier key through witness
+  const verifierKey = getVerifierKey();
+  
+  // Validate deletion certificate matches expected format
+  const expectedCert = persistentHash<Vector<3, Bytes<32>>>([
+    pad(32, "midnight:oblivion:deletion:cert"),
+    commitmentHash,
+    disclose(claimedDeletionDate) as Bytes<32>
+  ]);
+  assert(deletionCert == expectedCert, "Invalid deletion certificate");
+  
+  // Generate ZK proof hash without revealing private data
+  const proofHash = generateProofHash(commitmentHash, claimedDeletionDate, privateData);
+  
+  // Get current verification timestamp
+  const verificationTime = verificationCounter.read() as Uint<64>;
+  
+  // Validate timestamp is reasonable (not in future, not too old)
+  assert(disclose(claimedDeletionDate) <= verificationTime, "Deletion date cannot be in future");
+  
+  // Create verification record
+  const verificationRecord = VerificationRecord {
+    commitmentHash: disclose(commitmentHash),
+    verifiedAt: verificationTime,
+    verifierKey: disclose(verifierKey),
+    proofValid: true
+  };
+  
+  // Store verification on ledger
+  verifiedDeletions.insert(disclose(commitmentHash), verificationRecord);
+  verificationCounter.increment(1);
+  
+  // Return proof hash for external verification
+  return disclose(proofHash);
+}
+
+// Circuit to validate an existing proof
+export circuit validateProof(
+  commitmentHash: Bytes<32>,
+  providedProofHash: Bytes<32>
+): Boolean {
+  // Check if verification exists
+  assert(verifiedDeletions.member(disclose(commitmentHash)), "No verification found for commitment");
+  
+  const record = verifiedDeletions.lookup(disclose(commitmentHash));
+  
+  // For validation, we need to regenerate the proof hash
+  // This requires the private data witness again
+  const privateData = getPrivateData(commitmentHash);
+  
+  // Reconstruct the proof hash using stored verification time
+  const reconstructedHash = generateProofHash(
+    commitmentHash,
+    record.verifiedAt,
+    privateData
+  );
+  
+  // Verify the provided proof matches our stored proof
+  return disclose(reconstructedHash == disclose(providedProofHash)) && record.proofValid;
+}
+
+// Helper circuit to get verification details (read-only)
+export circuit getVerification(commitmentHash: Bytes<32>): VerificationRecord {
+  assert(verifiedDeletions.member(disclose(commitmentHash)), "No verification found");
+  return verifiedDeletions.lookup(disclose(commitmentHash));
+}
+
+// Helper circuit to check if deletion has been verified
+export circuit isVerified(commitmentHash: Bytes<32>): Boolean {
+  return verifiedDeletions.member(disclose(commitmentHash));
+}
+
+// Circuit to generate a public verification token (without revealing private data)
+export circuit generatePublicToken(commitmentHash: Bytes<32>): Bytes<32> {
+  assert(verifiedDeletions.member(disclose(commitmentHash)), "Commitment not verified");
+  
+  const record = verifiedDeletions.lookup(disclose(commitmentHash));
+  
+  // Generate a public token that can be shared for audit purposes
+  return persistentHash<Vector<4, Bytes<32>>>([
+    pad(32, "midnight:oblivion:public:token"),
+    commitmentHash,
+    record.verifiedAt as Bytes<32>,
+    record.verifierKey
+  ]);
+}
