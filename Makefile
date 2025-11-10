@@ -16,9 +16,16 @@ help:
 	@echo "  make test        Run all tests"
 	@echo ""
 	@echo "Docker:"
-	@echo "  make docker-up   Start Docker services"
-	@echo "  make docker-down Stop Docker services"
-	@echo "  make docker-logs View Docker logs"
+	@echo "  make docker-up          Start Docker services"
+	@echo "  make docker-down        Stop Docker services"
+	@echo "  make docker-logs        View Docker logs"
+	@echo ""
+	@echo "Proof Server:"
+	@echo "  make proof-server-start   Start proof server"
+	@echo "  make proof-server-stop    Stop proof server"
+	@echo "  make proof-server-test    Test proof server connection"
+	@echo "  make proof-server-logs    View proof server logs"
+	@echo "  make proof-server-restart Restart proof server"
 	@echo ""
 	@echo "Utilities:"
 	@echo "  make clean       Clean build artifacts"
@@ -73,6 +80,30 @@ docker-down:
 
 docker-logs:
 	docker-compose logs -f
+
+# Proof Server
+proof-server-start:
+	@echo "Starting Midnight proof server on port 6300..."
+	docker-compose up -d proof-server
+	@echo "Proof server started. Testing connection..."
+	@sleep 5
+	@cd contracts && npm run test:proof-server || echo "Note: Run 'npm install' in contracts/ if test fails"
+
+proof-server-stop:
+	docker-compose stop proof-server
+
+proof-server-logs:
+	docker logs -f oblivion-proof-server
+
+proof-server-test:
+	@echo "Testing proof server connectivity..."
+	@cd contracts && npm run test:proof-server
+
+proof-server-restart:
+	docker-compose restart proof-server
+	@echo "Proof server restarted. Testing connection..."
+	@sleep 5
+	@cd contracts && npm run test:proof-server || echo "Note: Run 'npm install' in contracts/ if test fails"
 
 # Utilities
 clean:

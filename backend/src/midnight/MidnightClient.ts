@@ -15,6 +15,8 @@ export interface MidnightConfig {
   proofServerUrl: string;
   networkId: NetworkId;
   walletSeed?: string;
+  dataCommitmentContract?: string;
+  zkDeletionVerifierContract?: string;
 }
 
 export interface CommitmentParams {

@@ -19,7 +19,8 @@ The Oblivion Protocol enables users to exercise their "Right to Be Forgotten" wi
 
 - Node.js 18+
 - Docker and Docker Compose
-- Midnight CLI tools
+- Midnight Compact CLI (`npm install -g @midnight-ntwrk/compact-cli`)
+- Midnight proof server (runs via Docker)
 
 ### Development Setup
 
@@ -31,11 +32,24 @@ The Oblivion Protocol enables users to exercise their "Right to Be Forgotten" wi
    npm run install:all
    ```
 
-2. **Start development environment:**
+2. **Start Midnight proof server:**
 
    ```bash
-   # Start PostgreSQL and Midnight proof server
-   npm run docker:up
+   # Start proof server (required for contract deployment and ZK proofs)
+   make proof-server-start
+
+   # Or manually with Docker
+   docker run -p 6300:6300 midnightnetwork/proof-server -- 'midnight-proof-server --network testnet'
+
+   # Test connection
+   make proof-server-test
+   ```
+
+3. **Start development environment:**
+
+   ```bash
+   # Start PostgreSQL
+   docker-compose up -d postgres
 
    # Start backend API (in separate terminal)
    npm run dev:backend
@@ -44,11 +58,22 @@ The Oblivion Protocol enables users to exercise their "Right to Be Forgotten" wi
    npm run dev:dashboard
    ```
 
-3. **Configure environment:**
+4. **Configure environment:**
+
    ```bash
    cp backend/.env.example backend/.env
    # Edit backend/.env with your configuration
    ```
+
+5. **Deploy smart contracts (optional for local development):**
+
+   ```bash
+   cd contracts
+   npm run compile    # Compile Compact contracts
+   npm run deploy     # Deploy to Midnight testnet
+   ```
+
+   See [Proof Server Setup Guide](docs/PROOF_SERVER_SETUP.md) for detailed instructions.
 
 ### Project Structure
 

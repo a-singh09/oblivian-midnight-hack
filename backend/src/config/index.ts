@@ -55,14 +55,17 @@ function getMidnightConfig(): MidnightConfig {
 
   return {
     nodeUrl:
-      process.env.MIDNIGHT_NODE_URL || "https://testnet.midnight.network",
+      process.env.MIDNIGHT_NODE_URL ||
+      "https://rpc.testnet-02.midnight.network",
     indexerUrl:
       process.env.MIDNIGHT_INDEXER_URL ||
-      "https://indexer.testnet.midnight.network/api/v1/graphql",
+      "https://indexer.testnet-02.midnight.network/api/v1/graphql",
     proofServerUrl:
       process.env.MIDNIGHT_PROOF_SERVER_URL || "http://localhost:6300",
     networkId: midnightNetworkId,
     walletSeed: process.env.MIDNIGHT_WALLET_SEED,
+    dataCommitmentContract: process.env.DATA_COMMITMENT_CONTRACT,
+    zkDeletionVerifierContract: process.env.ZK_DELETION_VERIFIER_CONTRACT,
   };
 }
 
@@ -94,6 +97,19 @@ export function validateConfig(): void {
     );
   }
 
+  // Warn about missing contract addresses
+  if (!process.env.DATA_COMMITMENT_CONTRACT) {
+    console.warn(
+      "WARNING: DATA_COMMITMENT_CONTRACT not set. Contract interactions will fail.",
+    );
+  }
+
+  if (!process.env.ZK_DELETION_VERIFIER_CONTRACT) {
+    console.warn(
+      "WARNING: ZK_DELETION_VERIFIER_CONTRACT not set. ZK proof verification will fail.",
+    );
+  }
+
   // Warn about default encryption key in production
   if (process.env.NODE_ENV === "production" && !process.env.ENCRYPTION_KEY) {
     console.warn(
@@ -102,4 +118,13 @@ export function validateConfig(): void {
   }
 
   console.log("Configuration validation passed");
+  console.log(
+    `Midnight Network: ${process.env.MIDNIGHT_NETWORK_ID || "testnet"}`,
+  );
+  console.log(
+    `Data Commitment Contract: ${process.env.DATA_COMMITMENT_CONTRACT || "Not set"}`,
+  );
+  console.log(
+    `ZK Deletion Verifier Contract: ${process.env.ZK_DELETION_VERIFIER_CONTRACT || "Not set"}`,
+  );
 }

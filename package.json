@@ -48,5 +48,10 @@
     "zero-knowledge"
   ],
   "author": "Oblivion Protocol",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "@midnight-ntwrk/compact-runtime": "^0.9.0",
+    "rxjs": "^7.8.2",
+    "ws": "^8.18.3"
+  }
 }

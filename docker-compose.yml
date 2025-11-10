@@ -19,22 +19,21 @@ services:
 
   # Midnight proof server for ZK-SNARK generation
   proof-server:
-    image: midnight/proof-server:latest
+    image: midnightnetwork/proof-server:latest
     container_name: oblivion-proof-server
+    command: midnight-proof-server --network testnet
     ports:
       - "6300:6300"
     environment:
-      - PROOF_SERVER_PORT=6300
-      - LOG_LEVEL=info
-    volumes:
-      - proof_data:/app/data
+      - RUST_LOG=info
     networks:
       - oblivion-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:6300/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:6300/health || exit 1"]
       interval: 30s
       timeout: 10s
-      retries: 3
+      retries: 5
+      start_period: 40s
 
   # Backend API server (for development)
   backend:
@@ -78,7 +77,6 @@ services:
 
 volumes:
   postgres_data:
-  proof_data:
 
 networks:
   oblivion-network:
