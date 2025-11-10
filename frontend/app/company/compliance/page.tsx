@@ -14,6 +14,7 @@ import {
   Shield,
 } from "lucide-react";
 import { ComplianceMetricsChart } from "@/components/company/ComplianceMetricsChart";
+import { BlockchainAuditReport } from "@/components/company/BlockchainAuditReport";
 
 export default function CompliancePage() {
   const { apiKey } = useCompany();
@@ -295,6 +296,13 @@ Verification: https://verify.oblivion.network/company/demo
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Blockchain Audit Report */}
+      <section className="border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <BlockchainAuditReport />
         </div>
       </section>
 

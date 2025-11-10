@@ -13,6 +13,7 @@ import {
 import { DataLocationCard } from "@/components/dashboard/DataLocationCard";
 import { DataVisualization } from "@/components/dashboard/DataVisualization";
 import { DeleteAllButton } from "@/components/dashboard/DeleteAllButton";
+import { TransactionMonitor } from "@/components/blockchain/TransactionMonitor";
 
 export default function UserDashboardPage() {
   const { userDID, setUserDID, dataLocations, loading, error, refreshData } =
@@ -173,6 +174,11 @@ export default function UserDashboardPage() {
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Transaction Monitor */}
+        <div className="mb-12">
+          <TransactionMonitor />
+        </div>
+
         {/* Delete All Section */}
         <DeleteAllButton />
 

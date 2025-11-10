@@ -13,6 +13,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 import { CompanyAuthGate } from "@/components/company/CompanyAuthGate";
+import { BlockchainMetrics } from "@/components/company/BlockchainMetrics";
 
 export default function CompanyDashboardPage() {
   const { stats, loading, error, refreshStats, apiKey } = useCompany();
@@ -181,6 +182,13 @@ export default function CompanyDashboardPage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Blockchain Metrics */}
+      <section className="border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <BlockchainMetrics />
         </div>
       </section>
 

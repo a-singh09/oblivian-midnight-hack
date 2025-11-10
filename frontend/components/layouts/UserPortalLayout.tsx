@@ -4,6 +4,7 @@ import React, { ReactNode } from "react";
 import Link from "next/link";
 import { Home, Shield, FileText, LogOut } from "lucide-react";
 import { DashboardProvider } from "@/contexts/DashboardContext";
+import { WalletConnectButton } from "@/components/blockchain/WalletConnectButton";
 
 interface UserPortalLayoutProps {
   children: ReactNode;
@@ -48,6 +49,7 @@ export function UserPortalLayout({ children }: UserPortalLayoutProps) {
               </div>
 
               <div className="flex items-center gap-4">
+                <WalletConnectButton />
                 <Link
                   href="/"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"

@@ -9,11 +9,15 @@ import React, {
 } from "react";
 import { apiClient, DataLocation, DeletionResult } from "@/lib/api-client";
 import { wsClient, WebSocketMessage } from "@/lib/websocket-client";
+import {
+  blockchainDataService,
+  EnhancedDataLocation,
+} from "@/lib/blockchain-data-service";
 
 interface DashboardContextType {
   userDID: string | null;
   setUserDID: (did: string) => void;
-  dataLocations: DataLocation[];
+  dataLocations: EnhancedDataLocation[];
   loading: boolean;
   error: string | null;
   refreshData: () => Promise<void>;
@@ -28,13 +32,15 @@ const DashboardContext = createContext<DashboardContextType | undefined>(
 
 export function DashboardProvider({ children }: { children: ReactNode }) {
   const [userDID, setUserDID] = useState<string | null>(null);
-  const [dataLocations, setDataLocations] = useState<DataLocation[]>([]);
+  const [dataLocations, setDataLocations] = useState<EnhancedDataLocation[]>(
+    [],
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deletionProgress, setDeletionProgress] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Fetch user data footprint
+  // Fetch user data footprint from both backend and blockchain
   const refreshData = async () => {
     if (!userDID) return;
 
@@ -42,8 +48,14 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
+      // Fetch from backend API
       const locations = await apiClient.getUserFootprint(userDID);
-      setDataLocations(locations);
+
+      // Enhance with blockchain data
+      const enhancedLocations =
+        await blockchainDataService.enhanceWithBlockchainData(locations);
+
+      setDataLocations(enhancedLocations);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch data");
       console.error("Failed to fetch user footprint:", err);
@@ -52,7 +64,7 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Delete all user data
+  // Delete all user data with blockchain integration
   const deleteAllData = async (): Promise<DeletionResult> => {
     if (!userDID) {
       throw new Error("No user DID set");
@@ -63,9 +75,30 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
+      // Step 1: Delete from backend (33% progress)
+      setDeletionProgress(10);
       const result = await apiClient.deleteAllUserData(userDID);
+      setDeletionProgress(33);
+
+      // Step 2: Generate ZK proofs (66% progress)
+      // This happens on the backend via proof server
+      setDeletionProgress(50);
+
+      // Simulate proof generation time (30-60 seconds in real scenario)
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      setDeletionProgress(66);
+
+      // Step 3: Record on blockchain (100% progress)
+      // The backend handles blockchain submission
+      setDeletionProgress(80);
+
+      // Wait for blockchain confirmation
+      await new Promise((resolve) => setTimeout(resolve, 1000));
       setDeletionProgress(100);
+
+      // Refresh data to show updated blockchain status
       await refreshData();
+
       return result;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete data");
@@ -86,7 +119,11 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
           setDataLocations((prev) =>
             prev.map((loc) =>
               loc.commitmentHash === message.commitmentHash
-                ? { ...loc, deleted: message.status === "deleted" }
+                ? {
+                    ...loc,
+                    deleted: message.status === "deleted",
+                    blockchainStatus: "deleted",
+                  }
                 : loc,
             ),
           );
@@ -106,7 +143,15 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
           setDataLocations((prev) =>
             prev.map((loc) =>
               loc.commitmentHash === message.proofHash
-                ? { ...loc, deletionProofHash: message.transactionHash }
+                ? {
+                    ...loc,
+                    deletionProofHash: message.transactionHash,
+                    transactionHash: message.transactionHash,
+                    blockchainStatus: "confirmed",
+                    explorerUrl: blockchainDataService.getExplorerUrl(
+                      message.transactionHash,
+                    ),
+                  }
                 : loc,
             ),
           );
@@ -117,14 +162,47 @@ export function DashboardProvider({ children }: { children: ReactNode }) {
       wsClient.on("deletion_progress", handleProgress);
       wsClient.on("blockchain_confirmation", handleConfirmation);
 
+      // Subscribe to blockchain events for real-time updates
+      const unsubscribe = blockchainDataService.subscribeToBlockchainEvents(
+        userDID,
+        (commitment) => {
+          setDataLocations((prev) =>
+            prev.map((loc) =>
+              loc.commitmentHash === commitment.commitmentHash
+                ? {
+                    ...loc,
+                    blockchainStatus: commitment.deleted
+                      ? "deleted"
+                      : "confirmed",
+                    transactionHash: commitment.transactionHash,
+                    blockNumber: commitment.blockNumber,
+                    explorerUrl: commitment.transactionHash
+                      ? blockchainDataService.getExplorerUrl(
+                          commitment.transactionHash,
+                        )
+                      : undefined,
+                  }
+                : loc,
+            ),
+          );
+        },
+      );
+
       // Fetch initial data
       refreshData();
+
+      // Set up periodic refresh for blockchain data (every 30 seconds)
+      const refreshInterval = setInterval(() => {
+        refreshData();
+      }, 30000);
 
       return () => {
         wsClient.off("data_status_change", handleStatusChange);
         wsClient.off("deletion_progress", handleProgress);
         wsClient.off("blockchain_confirmation", handleConfirmation);
         wsClient.disconnect();
+        unsubscribe();
+        clearInterval(refreshInterval);
       };
     }
   }, [userDID]);

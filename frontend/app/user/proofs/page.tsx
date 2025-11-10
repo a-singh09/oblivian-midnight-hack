@@ -9,9 +9,7 @@ import {
   FileText,
   QrCode,
 } from "lucide-react";
-import { ProofVerificationWidget } from "@/components/proofs/ProofVerificationWidget";
-import { ProofExportDialog } from "@/components/proofs/ProofExportDialog";
-import { BlockchainExplorerWidget } from "@/components/blockchain/BlockchainExplorerWidget";
+import { ProofVerificationCard } from "@/components/proofs/ProofVerificationCard";
 
 interface DeletionProof {
   id: string;
@@ -258,23 +256,25 @@ export default function ProofsPage() {
         </div>
       </section>
 
-      {/* Proof Verification Widget */}
-      {selectedProof && !showExportDialog && (
-        <ProofVerificationWidget
-          proof={selectedProof}
-          onClose={() => setSelectedProof(null)}
-        />
-      )}
-
-      {/* Export Dialog */}
-      {selectedProof && showExportDialog && (
-        <ProofExportDialog
-          proof={selectedProof}
-          onClose={() => {
-            setShowExportDialog(false);
-            setSelectedProof(null);
-          }}
-        />
+      {/* Proof Verification Modal */}
+      {selectedProof && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="max-w-2xl w-full">
+            <ProofVerificationCard
+              commitmentHash={selectedProof.commitmentHash}
+              deletionProofHash={selectedProof.deletionProofHash}
+              transactionHash={selectedProof.transactionHash}
+              blockNumber={selectedProof.blockNumber}
+              timestamp={selectedProof.timestamp}
+            />
+            <button
+              onClick={() => setSelectedProof(null)}
+              className="mt-4 w-full px-4 py-2 bg-secondary hover:bg-secondary/80 rounded-lg font-medium transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

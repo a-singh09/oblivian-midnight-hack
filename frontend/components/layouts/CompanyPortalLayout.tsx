@@ -11,6 +11,7 @@ import {
   Home,
 } from "lucide-react";
 import { CompanyProvider } from "@/contexts/CompanyContext";
+import { WalletConnectButton } from "@/components/blockchain/WalletConnectButton";
 
 interface CompanyPortalLayoutProps {
   children: ReactNode;
@@ -63,6 +64,7 @@ export function CompanyPortalLayout({ children }: CompanyPortalLayoutProps) {
               </div>
 
               <div className="flex items-center gap-4">
+                <WalletConnectButton />
                 <Link
                   href="/"
                   className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2"
