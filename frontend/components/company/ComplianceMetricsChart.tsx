@@ -70,24 +70,32 @@ export function ComplianceMetricsChart({
         </h3>
         <ResponsiveContainer width="100%" height={300}>
           <BarChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="hsl(var(--border))"
+              opacity={0.3}
+            />
             <XAxis
               dataKey="date"
-              stroke="hsl(var(--muted-foreground))"
+              stroke="hsl(var(--foreground))"
               style={{ fontSize: "12px" }}
+              tick={{ fill: "hsl(var(--foreground))" }}
             />
             <YAxis
-              stroke="hsl(var(--muted-foreground))"
+              stroke="hsl(var(--foreground))"
               style={{ fontSize: "12px" }}
+              tick={{ fill: "hsl(var(--foreground))" }}
             />
             <Tooltip
               contentStyle={{
                 backgroundColor: "hsl(var(--card))",
                 border: "1px solid hsl(var(--border))",
                 borderRadius: "8px",
+                color: "hsl(var(--foreground))",
               }}
+              labelStyle={{ color: "hsl(var(--foreground))" }}
             />
-            <Legend />
+            <Legend wrapperStyle={{ color: "hsl(var(--foreground))" }} />
             <Bar
               dataKey="requests"
               fill="hsl(var(--primary))"
@@ -109,24 +117,32 @@ export function ComplianceMetricsChart({
         </h3>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="hsl(var(--border))"
+              opacity={0.3}
+            />
             <XAxis
               dataKey="date"
-              stroke="hsl(var(--muted-foreground))"
+              stroke="hsl(var(--foreground))"
               style={{ fontSize: "12px" }}
+              tick={{ fill: "hsl(var(--foreground))" }}
             />
             <YAxis
-              stroke="hsl(var(--muted-foreground))"
+              stroke="hsl(var(--foreground))"
               style={{ fontSize: "12px" }}
+              tick={{ fill: "hsl(var(--foreground))" }}
             />
             <Tooltip
               contentStyle={{
                 backgroundColor: "hsl(var(--card))",
                 border: "1px solid hsl(var(--border))",
                 borderRadius: "8px",
+                color: "hsl(var(--foreground))",
               }}
+              labelStyle={{ color: "hsl(var(--foreground))" }}
             />
-            <Legend />
+            <Legend wrapperStyle={{ color: "hsl(var(--foreground))" }} />
             <Line
               type="monotone"
               dataKey="avgResponseTime"
@@ -153,24 +169,32 @@ export function ComplianceMetricsChart({
         </h3>
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={data}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="hsl(var(--border))"
+              opacity={0.3}
+            />
             <XAxis
               dataKey="date"
-              stroke="hsl(var(--muted-foreground))"
+              stroke="hsl(var(--foreground))"
               style={{ fontSize: "12px" }}
+              tick={{ fill: "hsl(var(--foreground))" }}
             />
             <YAxis
-              stroke="hsl(var(--muted-foreground))"
+              stroke="hsl(var(--foreground))"
               style={{ fontSize: "12px" }}
+              tick={{ fill: "hsl(var(--foreground))" }}
             />
             <Tooltip
               contentStyle={{
                 backgroundColor: "hsl(var(--card))",
                 border: "1px solid hsl(var(--border))",
                 borderRadius: "8px",
+                color: "hsl(var(--foreground))",
               }}
+              labelStyle={{ color: "hsl(var(--foreground))" }}
             />
-            <Legend />
+            <Legend wrapperStyle={{ color: "hsl(var(--foreground))" }} />
             <Line
               type="monotone"
               dataKey="proofGenTime"
