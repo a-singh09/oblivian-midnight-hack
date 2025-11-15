@@ -151,3 +151,210 @@ npm run docker:down
 ## License
 
 MIT
+
+## 🚀 Quick Start
+
+### Try the Demo (No Setup Required)
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Visit:
+
+- **SDK Playground**: http://localhost:3000/company/playground
+- **Integration Setup**: http://localhost:3000/company/setup
+- **User Dashboard**: http://localhost:3000/user/dashboard
+
+### Full Documentation
+
+- **[Quick Start Guide](QUICK_START_GUIDE.md)** - Get running in 5 minutes
+- **[Implementation Summary](IMPLEMENTATION_SUMMARY.md)** - Technical details
+- **[Hackathon Plan](HACKATHON_IMPLEMENTATION_PLAN.md)** - Architecture overview
+
+## 🎯 What's New
+
+### ✅ SDK Playground
+
+Interactive demonstration of the Oblivion SDK with live code examples. Companies can try the SDK, see real API responses, and copy integration code.
+
+**Location**: `/company/playground`
+
+### ✅ Integration Wizard
+
+Step-by-step company onboarding with API key generation, SDK installation, and integration testing.
+
+**Location**: `/company/setup`
+
+### ✅ Contract Client
+
+Direct blockchain integration layer for Midnight smart contracts. Handles commitment registration, deletion proofs, and transaction monitoring.
+
+**File**: `frontend/lib/contract-client.ts`
+
+### ✅ Transaction Monitor
+
+Real-time blockchain transaction status with auto-refresh, confirmation tracking, and block explorer links.
+
+**Component**: `TransactionMonitor`
+
+## 🎨 Demo Flow
+
+### For Companies (3 minutes)
+
+1. Visit `/company/setup`
+2. Generate API key
+3. Try SDK playground
+4. Copy integration code
+
+### For Users (2 minutes)
+
+1. Visit `/user/dashboard`
+2. View data footprint
+3. Request deletion
+4. Verify proof on blockchain
+
+## 🏗️ Architecture
+
+```
+┌─────────────────┐
+│   Frontend      │  Next.js + React
+│   (This Repo)   │  - SDK Playground
+└────────┬────────┘  - Integration Wizard
+         │           - User Dashboard
+         │
+         ▼
+┌─────────────────┐
+│   Backend API   │  Express + PostgreSQL
+│   (Port 3000)   │  - Data Management
+└────────┬────────┘  - Proof Generation
+         │
+         ▼
+┌─────────────────┐
+│   Midnight      │  Blockchain Layer
+│   Blockchain    │  - Smart Contracts
+└─────────────────┘  - ZK Proofs
+```
+
+## 📦 Project Structure
+
+```
+oblivion-protocol/
+├── frontend/           # Next.js application
+│   ├── app/
+│   │   ├── company/   # Company portal
+│   │   │   ├── setup/         # Integration wizard
+│   │   │   └── playground/    # SDK playground
+│   │   └── user/      # User portal
+│   ├── components/
+│   │   ├── company/   # Company components
+│   │   │   ├── SDKPlayground.tsx
+│   │   │   └── IntegrationWizard.tsx
+│   │   └── blockchain/ # Blockchain components
+│   └── lib/
+│       └── contract-client.ts  # Blockchain integration
+├── backend/           # Express API
+│   └── src/
+│       └── midnight/  # Midnight client
+├── contracts/         # Smart contracts
+│   ├── src/
+│   │   └── DataCommitment.compact
+│   └── deployment.json
+└── sdk/              # Company SDK
+    └── src/
+        └── index.ts
+```
+
+## 🎯 Key Features
+
+### For Companies
+
+✅ **3-Line Integration**
+
+```typescript
+const sdk = new OblivionSDK({ apiKey, serviceName });
+await sdk.registerUserData(userDID, data, dataType);
+await sdk.handleDeletion(userDID);
+```
+
+✅ **Automatic GDPR Compliance**
+
+- Right to be Forgotten (Article 17)
+- Right to Access (Article 15)
+- Audit trail requirements
+- Deletion proof generation
+
+✅ **SDK Playground**
+
+- Live code examples
+- Real API responses
+- Copy-paste ready code
+- Integration testing
+
+### For Users
+
+✅ **Data Footprint Visualization**
+
+- See all registered data
+- View service providers
+- Check blockchain commitments
+
+✅ **One-Click Deletion**
+
+- Delete all data
+- Generate ZK proofs
+- Verify on blockchain
+
+✅ **Proof Verification**
+
+- Download certificates
+- Verify on block explorer
+- Immutable audit trail
+
+## 🔧 Technology Stack
+
+- **Frontend**: Next.js 14, React 19, TypeScript, Tailwind CSS
+- **Backend**: Express, PostgreSQL, TypeScript
+- **Blockchain**: Midnight Network (Testnet)
+- **Smart Contracts**: Compact Language
+- **SDK**: TypeScript, Axios
+- **UI Components**: shadcn/ui, Radix UI
+
+## 📊 Demo Metrics
+
+- **Integration Time**: < 10 minutes
+- **Code Required**: 3-5 lines
+- **Proof Generation**: < 30 seconds
+- **Blockchain Confirmation**: < 1 minute
+
+## 🎬 Demo Script
+
+See [QUICK_START_GUIDE.md](QUICK_START_GUIDE.md) for a complete 10-minute demo script.
+
+## 🐛 Known Issues
+
+- Wallet connection requires Lace extension
+- Backend must be running for real blockchain interactions
+- Indexer queries require network connectivity
+
+See [INTEGRATION_GAPS.md](INTEGRATION_GAPS.md) for details.
+
+## 🤝 Contributing
+
+This is a hackathon project. For production use, additional security audits and testing are required.
+
+## 📄 License
+
+MIT License - see LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- Midnight Network for blockchain infrastructure
+- Lace Wallet for user authentication
+- shadcn/ui for beautiful components
+
+---
+
+**Built with ❤️ for the Midnight Hackathon**

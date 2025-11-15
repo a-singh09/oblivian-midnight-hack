@@ -44,5 +44,10 @@ export interface StorageConfig {
   database: string;
   username: string;
   password: string;
-  ssl?: boolean;
+  ssl?:
+    | boolean
+    | {
+        rejectUnauthorized: boolean;
+        ca?: string;
+      };
 }

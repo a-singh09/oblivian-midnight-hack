@@ -21,13 +21,41 @@ export interface AppConfig {
  * Get storage configuration from environment variables
  */
 function getStorageConfig(): StorageConfig {
+  // Configure SSL based on environment variables
+  let sslConfig: boolean | { rejectUnauthorized: boolean; ca?: string } = false;
+
+  if (process.env.DB_SSL === "true") {
+    if (process.env.DATABASE_CA_CERT) {
+      // Aiven and other managed databases require CA certificate
+      // Convert base64 certificate to PEM format if needed
+      let caCert = process.env.DATABASE_CA_CERT;
+
+      // If the cert doesn't have PEM headers, add them
+      if (!caCert.includes("BEGIN CERTIFICATE")) {
+        // Split into 64-character lines for proper PEM format
+        const certBody = caCert.replace(/\s/g, "");
+        const formattedCert =
+          certBody.match(/.{1,64}/g)?.join("\n") || certBody;
+        caCert = `-----BEGIN CERTIFICATE-----\n${formattedCert}\n-----END CERTIFICATE-----`;
+      }
+
+      sslConfig = {
+        rejectUnauthorized: false, // Aiven uses self-signed certificates
+        ca: caCert,
+      };
+    } else {
+      // Simple SSL without CA certificate
+      sslConfig = true;
+    }
+  }
+
   return {
     host: process.env.DB_HOST || "localhost",
     port: parseInt(process.env.DB_PORT || "5432"),
     database: process.env.DB_NAME || "oblivion_protocol",
     username: process.env.DB_USER || "postgres",
     password: process.env.DB_PASSWORD || "password",
-    ssl: process.env.DB_SSL === "true",
+    ssl: sslConfig,
   };
 }
 

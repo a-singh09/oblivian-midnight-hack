@@ -61,8 +61,18 @@ export class MidnightClient {
         `Initializing MidnightClient for network: ${this.config.networkId}`,
       );
 
-      // Test connections to all services
-      await this.testConnections();
+      // Skip connection tests if SKIP_MIDNIGHT_CHECKS is set (for development)
+      if (process.env.SKIP_MIDNIGHT_CHECKS === "true") {
+        console.warn(
+          "⚠️  Skipping Midnight service connection checks (SKIP_MIDNIGHT_CHECKS=true)",
+        );
+        console.warn(
+          "   Blockchain operations will fail until services are available",
+        );
+      } else {
+        // Test connections to all services
+        await this.testConnections();
+      }
 
       this.initialized = true;
       console.log("MidnightClient initialized successfully");
@@ -78,15 +88,24 @@ export class MidnightClient {
    * Test connections to Midnight services
    */
   private async testConnections(): Promise<void> {
-    const tests = [
-      this.testNodeConnection(),
-      this.testIndexerConnection(),
-      this.testProofServerConnection(),
-    ];
+    const tests = [this.testNodeConnection(), this.testIndexerConnection()];
 
     try {
       await Promise.all(tests);
-      console.log("All Midnight service connections verified");
+      console.log("Core Midnight service connections verified");
+
+      // Test proof server separately (optional for development)
+      try {
+        await this.testProofServerConnection();
+        console.log("Proof server connection verified");
+      } catch (error) {
+        console.warn(
+          "⚠️  Proof server not available - ZK proof generation will not work",
+        );
+        console.warn(
+          "   Start the proof server with: npm run proof-server (if available)",
+        );
+      }
     } catch (error) {
       throw new Error(
         `Service connection test failed: ${error instanceof Error ? error.message : "Unknown error"}`,
