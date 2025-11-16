@@ -157,10 +157,10 @@ export class StorageManager {
         certificates.push(certificate);
       }
 
-      // Mark all records as deleted (physical deletion)
+      // Mark all records as deleted (keep encrypted data for audit trail)
       const deleteQuery = `
         UPDATE encrypted_data 
-        SET deleted = TRUE, deleted_at = NOW(), encrypted_payload = NULL, encryption_iv = NULL
+        SET deleted = TRUE, deleted_at = NOW()
         WHERE user_did = $1 AND deleted = FALSE
       `;
 

@@ -43,7 +43,7 @@ fi
 
 # Step 4: Test database connection
 echo -e "${BLUE}🔍 Testing database connection...${NC}"
-psql "postgres://avnadmin:***REDACTED_PASSWORD***@pg-609a3e2-project-f45b.e.aivencloud.com:16173/oblivion?sslmode=require" -c "SELECT 1;" > /dev/null 2>&1
+psql "<ENTER_POSTGRESQL_URL>" -c "SELECT 1;" > /dev/null 2>&1
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✅ Database connection successful${NC}"
@@ -55,7 +55,7 @@ if [ $? -eq 0 ]; then
     
     if [ "$setup_db" = "y" ] || [ "$setup_db" = "Y" ]; then
         echo -e "${BLUE}📊 Setting up database tables...${NC}"
-        psql "postgres://avnadmin:***REDACTED_PASSWORD***@pg-609a3e2-project-f45b.e.aivencloud.com:16173/oblivion?sslmode=require" -f setup-database.sql
+        psql "<ENTER_POSTGRESQL_URL>" -f setup-database.sql
         
         if [ $? -eq 0 ]; then
             echo -e "${GREEN}✅ Database tables created${NC}"

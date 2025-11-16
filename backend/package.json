@@ -2,9 +2,10 @@
   "name": "@oblivion/backend",
   "version": "1.0.0",
   "description": "Backend API server for Oblivion Protocol",
+  "type": "module",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "dev": "node --loader ts-node/esm --experimental-specifier-resolution=node src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "jest",
@@ -12,12 +13,25 @@
     "migrate": "ts-node src/database/migrate.ts"
   },
   "dependencies": {
+    "@midnight-ntwrk/compact-runtime": "^0.9.0",
+    "@midnight-ntwrk/ledger": "^4.0.0",
+    "@midnight-ntwrk/midnight-js-contracts": "2.0.2",
+    "@midnight-ntwrk/midnight-js-http-client-proof-provider": "2.0.2",
+    "@midnight-ntwrk/midnight-js-indexer-public-data-provider": "2.0.2",
+    "@midnight-ntwrk/midnight-js-level-private-state-provider": "2.0.2",
+    "@midnight-ntwrk/midnight-js-network-id": "2.0.2",
+    "@midnight-ntwrk/midnight-js-node-zk-config-provider": "2.0.2",
+    "@midnight-ntwrk/midnight-js-types": "2.0.2",
+    "@midnight-ntwrk/wallet": "5.0.0",
+    "@midnight-ntwrk/wallet-api": "5.0.0",
+    "@midnight-ntwrk/zswap": "^4.0.0",
     "axios": "^1.5.0",
     "cors": "^2.8.5",
     "dotenv": "^16.3.0",
     "express": "^4.18.0",
     "helmet": "^7.0.0",
     "pg": "^8.11.0",
+    "rxjs": "^7.8.1",
     "ws": "^8.14.0"
   },
   "devDependencies": {
@@ -32,7 +46,6 @@
     "supertest": "^6.3.4",
     "ts-jest": "^29.4.5",
     "ts-node": "^10.9.0",
-    "ts-node-dev": "^2.0.0",
     "typescript": "^5.0.0"
   }
 }

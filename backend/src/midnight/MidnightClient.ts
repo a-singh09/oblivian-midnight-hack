@@ -501,6 +501,13 @@ export class MidnightClient {
   }
 
   /**
+   * Check if the client is initialized
+   */
+  public isInitialized(): boolean {
+    return this.initialized;
+  }
+
+  /**
    * Get current configuration
    */
   public getConfig(): MidnightConfig {
