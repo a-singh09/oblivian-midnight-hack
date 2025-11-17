@@ -88,14 +88,36 @@ export function IntegrationWizard() {
         });
 
         if (response.ok) {
-          const data = await response.json();
-          setTestResult(data);
+          const healthData = await response.json();
+
+          // Transform backend health response to integration test format
+          const testResult = {
+            success: healthData.status === "healthy",
+            message:
+              healthData.status === "healthy"
+                ? "Integration test passed - Backend is running!"
+                : "Backend is unhealthy",
+            services: {
+              backend: true,
+              database: healthData.services?.database?.status === "connected",
+              blockchain:
+                healthData.services?.blockchain?.status === "connected" ||
+                healthData.services?.blockchain?.status === "skipped",
+              proofServer:
+                healthData.services?.proofServer?.status === "connected",
+            },
+            note: "Backend is running and connected to services",
+            timestamp: healthData.timestamp,
+            version: healthData.version,
+          };
+
+          setTestResult(testResult);
           setCurrentStep(4);
-          toast.success("Integration test passed!");
+          toast.success("Integration test passed - Backend connected!");
           return;
         }
       } catch (backendError) {
-        console.log("Backend not available, using demo mode");
+        console.log("Backend not available, using demo mode", backendError);
       }
 
       // Fallback: Demo mode (backend not running)

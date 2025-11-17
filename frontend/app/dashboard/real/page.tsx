@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { apiClient } from "@/lib/api-client";
-import { StatusIndicator } from "@/components/dashboard/StatusIndicator";
 
 interface DataLocation {
   commitmentHash: string;
@@ -107,12 +106,9 @@ export default function RealDashboard() {
       {/* Header */}
       <section className="border-b border-border bg-secondary/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
-          <div className="flex items-center justify-between mb-6">
-            <h1 className="text-3xl font-semibold text-foreground">
-              Real Data Dashboard
-            </h1>
-            <StatusIndicator />
-          </div>
+          <h1 className="text-3xl font-semibold text-foreground mb-6">
+            Real Data Dashboard
+          </h1>
 
           {/* DID Input */}
           <div className="max-w-2xl">

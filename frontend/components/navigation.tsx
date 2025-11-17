@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import Link from "next/link"
-import { useState } from "react"
-import { Menu, X } from "lucide-react"
+import Link from "next/link";
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
 
 export function Navigation() {
-  const [isOpen, setIsOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
@@ -14,9 +14,13 @@ export function Navigation() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2 group">
             <div className="w-8 h-8 bg-gradient-to-br from-primary to-accent rounded-lg flex items-center justify-center">
-              <span className="text-sm font-bold text-primary-foreground">OP</span>
+              <span className="text-sm font-bold text-primary-foreground">
+                OP
+              </span>
             </div>
-            <span className="text-lg font-semibold text-foreground">Oblivion Protocol</span>
+            <span className="text-lg font-semibold text-foreground">
+              Oblivion Protocol
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -28,26 +32,32 @@ export function Navigation() {
               Dashboard
             </Link>
             <Link
+              href="/company-registration"
+              className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
+            >
+              Register Data
+            </Link>
+            <Link
+              href="/presentation"
+              className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
+            >
+              Demo
+            </Link>
+            <Link
               href="/for-companies"
               className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
             >
               For Companies
-            </Link>
-            <Link
-              href="/how-it-works"
-              className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
-            >
-              How It Works
             </Link>
           </div>
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
             <Link
-              href="/demo"
+              href="/dashboard"
               className="px-6 py-2 rounded-full bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors"
             >
-              Start Free Trial
+              Launch Dashboard
             </Link>
           </div>
 
@@ -66,30 +76,41 @@ export function Navigation() {
             <Link
               href="/dashboard"
               className="block text-muted-foreground hover:text-foreground transition-colors text-sm font-medium py-2"
+              onClick={() => setIsOpen(false)}
             >
               Dashboard
             </Link>
             <Link
+              href="/company-registration"
+              className="block text-muted-foreground hover:text-foreground transition-colors text-sm font-medium py-2"
+              onClick={() => setIsOpen(false)}
+            >
+              Register Data
+            </Link>
+            <Link
+              href="/presentation"
+              className="block text-muted-foreground hover:text-foreground transition-colors text-sm font-medium py-2"
+              onClick={() => setIsOpen(false)}
+            >
+              Demo
+            </Link>
+            <Link
               href="/for-companies"
               className="block text-muted-foreground hover:text-foreground transition-colors text-sm font-medium py-2"
+              onClick={() => setIsOpen(false)}
             >
               For Companies
             </Link>
             <Link
-              href="/how-it-works"
-              className="block text-muted-foreground hover:text-foreground transition-colors text-sm font-medium py-2"
-            >
-              How It Works
-            </Link>
-            <Link
-              href="/demo"
+              href="/dashboard"
               className="block px-6 py-2 rounded-full bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors text-center"
+              onClick={() => setIsOpen(false)}
             >
-              Start Free Trial
+              Launch Dashboard
             </Link>
           </div>
         )}
       </div>
     </nav>
-  )
+  );
 }
