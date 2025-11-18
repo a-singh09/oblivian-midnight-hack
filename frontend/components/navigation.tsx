@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import { WalletConnectButton } from "@/components/blockchain/WalletConnectButton";
 
 export function Navigation() {
   const [isOpen, setIsOpen] = useState(false);
@@ -53,6 +54,7 @@ export function Navigation() {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
+            <WalletConnectButton />
             <Link
               href="/dashboard"
               className="px-6 py-2 rounded-full bg-primary text-primary-foreground font-medium text-sm hover:bg-primary/90 transition-colors"

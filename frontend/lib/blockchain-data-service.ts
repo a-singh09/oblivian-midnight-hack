@@ -103,8 +103,14 @@ export class BlockchainDataService {
     return dataLocations.map((location) => {
       const blockchain = blockchainMap.get(location.commitmentHash);
 
+      // Ensure dataCategories is always an array
+      const dataCategories =
+        location.dataCategories ||
+        (location.dataType ? [location.dataType] : []);
+
       return {
         ...location,
+        dataCategories, // Normalize to array
         blockchainStatus: this.determineStatus(location, blockchain),
         transactionHash: blockchain?.transactionHash,
         blockNumber: blockchain?.blockNumber,

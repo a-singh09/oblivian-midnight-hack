@@ -46,9 +46,12 @@ export default function UserDashboardPage() {
   const stats = {
     total: dataLocations.length,
     active: dataLocations.filter((loc) => !loc.deleted).length,
-    deleted: dataLocations.filter((loc) => loc.deleted).length,
-    categories: new Set(dataLocations.flatMap((loc) => loc.dataCategories))
-      .size,
+    deleted: dataLocations.filter((loc) => !loc.deleted).length,
+    categories: new Set(
+      dataLocations.flatMap(
+        (loc) => loc.dataCategories || (loc.dataType ? [loc.dataType] : []),
+      ),
+    ).size,
   };
 
   if (loading && dataLocations.length === 0) {
@@ -111,7 +114,7 @@ export default function UserDashboardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/30 flex items-start gap-3">
             <AlertCircle
-              className="text-destructive flex-shrink-0 mt-0.5"
+              className="text-destructive shrink-0 mt-0.5"
               size={20}
             />
             <div>

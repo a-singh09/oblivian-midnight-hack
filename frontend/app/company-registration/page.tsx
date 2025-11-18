@@ -54,6 +54,12 @@ export default function CompanyRegistration() {
       setTxHash(result.blockchainTx);
       setSuccess(true);
 
+      // Save DID to localStorage so dashboard can use it
+      if (typeof window !== "undefined") {
+        localStorage.setItem("userDID", formData.userDID);
+        localStorage.setItem("lastCommitmentHash", result.commitmentHash);
+      }
+
       // Reset form
       setTimeout(() => {
         setFormData({
@@ -64,7 +70,7 @@ export default function CompanyRegistration() {
         });
         setSuccess(false);
         setTxHash("");
-      }, 5000);
+      }, 8000); // Increased to 8 seconds so user can read the message
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to register data");
       console.error("Error registering data:", err);
@@ -222,18 +228,40 @@ export default function CompanyRegistration() {
               {/* Success Message */}
               {success && (
                 <div className="p-4 rounded-lg bg-accent/10 border border-accent/30">
-                  <div className="flex items-center gap-2 text-accent mb-2">
+                  <div className="flex items-center gap-2 text-accent mb-3">
                     <Check size={20} />
                     <span className="font-semibold">
                       Data registered successfully!
                     </span>
                   </div>
-                  {txHash && (
-                    <div className="text-sm text-muted-foreground">
-                      <span className="font-medium">Transaction Hash:</span>
-                      <code className="ml-2 text-xs break-all">{txHash}</code>
+
+                  <div className="space-y-2 text-sm">
+                    <div className="p-3 rounded bg-background/50 border border-border">
+                      <div className="font-medium text-foreground mb-1">
+                        Your DID (Save this!):
+                      </div>
+                      <code className="text-xs text-primary break-all font-mono">
+                        {formData.userDID}
+                      </code>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        💡 This DID has been saved. Go to{" "}
+                        <a
+                          href="/dashboard"
+                          className="text-primary hover:underline font-medium"
+                        >
+                          Dashboard
+                        </a>{" "}
+                        to see your data!
+                      </p>
                     </div>
-                  )}
+
+                    {txHash && (
+                      <div className="text-muted-foreground">
+                        <span className="font-medium">Transaction Hash:</span>
+                        <code className="ml-2 text-xs break-all">{txHash}</code>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 

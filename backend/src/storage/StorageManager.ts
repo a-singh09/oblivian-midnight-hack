@@ -30,6 +30,77 @@ export class StorageManager {
   }
 
   /**
+   * Delete a single commitment by its hash and generate a deletion certificate
+   */
+  public async deleteCommitment(
+    commitmentHash: string,
+  ): Promise<DeletionCertificate | null> {
+    const client = await this.db.connect();
+
+    try {
+      await client.query("BEGIN");
+
+      const selectQuery = `
+        SELECT commitment_hash, user_did
+        FROM encrypted_data
+        WHERE commitment_hash = $1 AND deleted = FALSE
+        FOR UPDATE
+      `;
+
+      const commitmentHashBuffer = Buffer.from(commitmentHash, "hex");
+      const selectResult = await client.query(selectQuery, [
+        commitmentHashBuffer,
+      ]);
+
+      if (selectResult.rows.length === 0) {
+        await client.query("ROLLBACK");
+        console.log(`No active record found for commitment ${commitmentHash}`);
+        return null;
+      }
+
+      const row = selectResult.rows[0];
+      const userDID = row.user_did;
+      const timestamp = Date.now();
+
+      // Generate deletion certificate
+      const signature = generateDeletionSignature(
+        userDID,
+        commitmentHash,
+        timestamp,
+      );
+
+      const certificate: DeletionCertificate = {
+        userDID,
+        commitmentHash,
+        timestamp,
+        signature,
+      };
+
+      // Mark record as deleted (keep encrypted blob for audit)
+      const updateQuery = `
+        UPDATE encrypted_data
+        SET deleted = TRUE, deleted_at = NOW()
+        WHERE commitment_hash = $1
+      `;
+
+      await client.query(updateQuery, [commitmentHashBuffer]);
+
+      await client.query("COMMIT");
+
+      console.log(`Deleted commitment ${commitmentHash} for user ${userDID}`);
+      return certificate;
+    } catch (error) {
+      await client.query("ROLLBACK");
+      console.error("Error deleting commitment:", error);
+      throw new Error(
+        `Failed to delete commitment: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
    * Initialize the storage system
    */
   public async initialize(): Promise<void> {
@@ -336,6 +407,45 @@ export class StorageManager {
       console.error("Error getting stats:", error);
       throw new Error(
         `Failed to get stats: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
+    }
+  }
+
+  /**
+   * List all data locations (for company dashboard)
+   */
+  public async listAllDataLocations(): Promise<DataLocation[]> {
+    try {
+      const query = `
+        SELECT 
+          encode(commitment_hash, 'hex') as commitment_hash,
+          user_did,
+          data_type,
+          service_provider,
+          created_at,
+          deleted,
+          deleted_at,
+          deletion_proof_hash
+        FROM encrypted_data
+        ORDER BY created_at DESC
+      `;
+
+      const result = await this.db.query(query);
+
+      return result.rows.map((row) => ({
+        commitmentHash: row.commitment_hash,
+        userDID: row.user_did,
+        dataType: row.data_type,
+        serviceProvider: row.service_provider,
+        createdAt: row.created_at,
+        deleted: row.deleted,
+        deletedAt: row.deleted_at,
+        deletionProofHash: row.deletion_proof_hash,
+      }));
+    } catch (error) {
+      console.error("Error listing all data locations:", error);
+      throw new Error(
+        `Failed to list data locations: ${error instanceof Error ? error.message : "Unknown error"}`,
       );
     }
   }

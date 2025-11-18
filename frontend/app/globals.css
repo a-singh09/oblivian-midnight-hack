@@ -5,25 +5,36 @@
 
 :root {
   /* Dark theme color tokens for Oblivion Protocol */
-  --background: oklch(0.08 0 0); /* Deep dark background */
-  --foreground: oklch(0.95 0 0); /* Off-white text */
-  --card: oklch(0.12 0 0); /* Dark card background */
+  --background: oklch(0.08 0 0);
+  /* Deep dark background */
+  --foreground: oklch(0.95 0 0);
+  /* Off-white text */
+  --card: oklch(0.12 0 0);
+  /* Dark card background */
   --card-foreground: oklch(0.95 0 0);
   --popover: oklch(0.12 0 0);
   --popover-foreground: oklch(0.95 0 0);
-  --primary: oklch(0.52 0.165 185.88); /* Teal/cyan primary */
+  --primary: oklch(0.52 0.165 185.88);
+  /* Teal/cyan primary */
   --primary-foreground: oklch(0.95 0 0);
-  --secondary: oklch(0.35 0 0); /* Dark gray secondary */
+  --secondary: oklch(0.35 0 0);
+  /* Dark gray secondary */
   --secondary-foreground: oklch(0.95 0 0);
-  --muted: oklch(0.25 0 0); /* Dark muted */
-  --muted-foreground: oklch(0.65 0 0); /* Gray text */
-  --accent: oklch(0.55 0.15 190); /* Emerald accent */
+  --muted: oklch(0.25 0 0);
+  /* Dark muted */
+  --muted-foreground: oklch(0.65 0 0);
+  /* Gray text */
+  --accent: oklch(0.55 0.15 190);
+  /* Emerald accent */
   --accent-foreground: oklch(0.08 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.18 0 0); /* Dark borders */
+  --destructive-foreground: oklch(0.95 0 0);
+  /* Light text for destructive */
+  --border: oklch(0.18 0 0);
+  /* Dark borders */
   --input: oklch(0.15 0 0);
-  --ring: oklch(0.52 0.165 185.88); /* Teal ring */
+  --ring: oklch(0.52 0.165 185.88);
+  /* Teal ring */
   --chart-1: oklch(0.52 0.165 185.88);
   --chart-2: oklch(0.55 0.15 190);
   --chart-3: oklch(0.48 0.12 240);
@@ -88,6 +99,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
