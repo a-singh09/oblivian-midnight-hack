@@ -1,19 +1,19 @@
 import { Pool } from "pg";
-import { DatabaseConnection } from "../database/connection";
+import { DatabaseConnection } from "../database/connection.js";
 import {
   UserData,
   DeletionCertificate,
   DataLocation,
   EncryptedDataRecord,
   StorageConfig,
-} from "../types";
+} from "../types/index.js";
 import {
   encryptData,
   decryptData,
   generateCommitmentHash,
   generateDeletionSignature,
   generateEncryptionKey,
-} from "../utils/crypto";
+} from "../utils/crypto.js";
 
 /**
  * StorageManager handles encrypted off-chain data storage for Oblivion Protocol

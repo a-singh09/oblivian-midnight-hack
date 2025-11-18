@@ -133,9 +133,22 @@ export class OblivionServer {
         );
         console.warn("   3. Ensure proof server is running on port 6300\n");
 
-        // Fall back to old client
-        await this.midnightClient.initialize();
-        this.useMidnightJS = false;
+        // Try to fall back to old client, but don't fail if it doesn't work either
+        try {
+          await this.midnightClient.initialize();
+          this.useMidnightJS = false;
+          console.log("✅ Fallback MidnightClient initialized\n");
+        } catch (fallbackError) {
+          console.warn(
+            "⚠️  Fallback client initialization also failed (non-critical):",
+            fallbackError,
+          );
+          console.warn("   Server will run without blockchain integration");
+          console.warn(
+            "   Set SKIP_MIDNIGHT_CHECKS=true to suppress connection attempts\n",
+          );
+          this.useMidnightJS = false;
+        }
       }
 
       // Setup middleware
@@ -239,7 +252,12 @@ export class OblivionServer {
 
       if (process.env.SKIP_MIDNIGHT_CHECKS !== "true") {
         try {
-          networkStats = await this.midnightClient.getNetworkStats();
+          // Only try to get network stats if client is initialized
+          if (this.midnightClient.isInitialized()) {
+            networkStats = await this.midnightClient.getNetworkStats();
+          } else {
+            blockchainStatus = "not_initialized";
+          }
         } catch (error) {
           blockchainStatus = "unavailable";
           console.warn("Blockchain stats unavailable:", error);
@@ -571,12 +589,9 @@ export class OblivionServer {
           // Mark as deleted on blockchain
           let transactionHash: string;
           if (this.useMidnightJS) {
-            // For now, use mock transaction hash
-            // In full implementation, this would call a markAsDeleted circuit
-            transactionHash = `0xdel${Date.now().toString(16)}${Math.random().toString(36).substr(2, 9)}`;
-            console.log(
-              "🌙 Deletion marked on blockchain (mock):",
-              transactionHash,
+            transactionHash = await this.midnightContractClient.markAsDeleted(
+              certificate.commitmentHash,
+              proofHash,
             );
           } else {
             transactionHash = await this.midnightClient.markDeleted(

@@ -1,6 +1,7 @@
 import { config } from "dotenv";
 import { StorageConfig } from "../types";
-import { MidnightConfig, NetworkId } from "../midnight/MidnightClient";
+import { MidnightConfig } from "../midnight/MidnightClient";
+import { NetworkId } from "@midnight-ntwrk/midnight-js-network-id";
 
 // Load environment variables
 config();
@@ -65,20 +66,20 @@ function getStorageConfig(): StorageConfig {
 function getMidnightConfig(): MidnightConfig {
   const networkId = process.env.MIDNIGHT_NETWORK_ID || "testnet";
 
-  // Map string network ID to NetworkId enum
+  // Map string network ID to NetworkId enum from SDK
   let midnightNetworkId: NetworkId;
   switch (networkId.toLowerCase()) {
     case "testnet":
-      midnightNetworkId = "testnet" as NetworkId;
+      midnightNetworkId = NetworkId.TestNet;
       break;
     case "mainnet":
-      midnightNetworkId = "mainnet" as NetworkId;
+      midnightNetworkId = NetworkId.MainNet;
       break;
     case "devnet":
-      midnightNetworkId = "devnet" as NetworkId;
+      midnightNetworkId = NetworkId.Undeployed; // DevNet uses Undeployed
       break;
     default:
-      midnightNetworkId = "testnet" as NetworkId;
+      midnightNetworkId = NetworkId.TestNet;
   }
 
   return {

@@ -1,7 +1,5 @@
 import axios from "axios";
-
-// Type definitions for Midnight network (simplified for development)
-export type NetworkId = "testnet" | "mainnet" | "devnet";
+import { NetworkId } from "@midnight-ntwrk/midnight-js-network-id";
 
 /**
  * MidnightClient wrapper for Oblivion Protocol
@@ -142,8 +140,9 @@ export class MidnightClient {
    */
   private async testIndexerConnection(): Promise<void> {
     try {
+      // The indexerUrl already includes the /api/v1/graphql path
       const response = await axios.post(
-        `${this.config.indexerUrl}/graphql`,
+        this.config.indexerUrl,
         {
           query: "{ __schema { types { name } } }",
         },
@@ -464,7 +463,7 @@ export class MidnightClient {
       `;
 
       const response = await axios.post(
-        `${this.config.indexerUrl}/graphql`,
+        this.config.indexerUrl, // URL already includes /api/v1/graphql
         { query },
         {
           headers: { "Content-Type": "application/json" },
@@ -479,9 +478,21 @@ export class MidnightClient {
       }
 
       const data = response.data.data;
+
+      // Handle null or missing data gracefully
+      if (!data) {
+        console.warn(
+          "⚠️  Network stats query returned no data - indexer may not be fully synced",
+        );
+        return {
+          blockHeight: 0,
+          totalCommitments: 0,
+        };
+      }
+
       return {
-        blockHeight: data.blocks[0]?.height || 0,
-        totalCommitments: data.commitments_aggregate.aggregate.count || 0,
+        blockHeight: data.blocks?.[0]?.height || 0,
+        totalCommitments: data.commitments_aggregate?.aggregate?.count || 0,
       };
     } catch (error) {
       console.error("Error getting network stats:", error);
