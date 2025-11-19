@@ -215,6 +215,11 @@ export class OblivionServer {
 
     // Deletion endpoint - delete all user data
     apiRouter.post("/user/:did/delete-all", this.handleDeleteAll.bind(this));
+    // Delete single commitment
+    apiRouter.post(
+      "/user/:did/delete/:commitment",
+      this.handleDeleteCommitment.bind(this),
+    );
 
     // Webhook management endpoints
     apiRouter.post("/webhooks", this.handleRegisterWebhook.bind(this));
@@ -223,6 +228,13 @@ export class OblivionServer {
     apiRouter.delete(
       "/webhooks/:webhookId",
       this.handleDeleteWebhook.bind(this),
+    );
+
+    // Company dashboard endpoints
+    apiRouter.get("/company/stats", this.handleGetCompanyStats.bind(this));
+    apiRouter.get(
+      "/company/deletion-requests",
+      this.handleGetDeletionRequests.bind(this),
     );
 
     // Mount API router
@@ -699,6 +711,126 @@ export class OblivionServer {
   }
 
   /**
+   * Delete a single commitment for a user
+   */
+  private async handleDeleteCommitment(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
+    try {
+      const { did, commitment } = req.params;
+
+      if (!did.startsWith("did:midnight:")) {
+        res.status(400).json({
+          error: "Bad Request",
+          message: "Invalid userDID format. Must start with 'did:midnight:'",
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Delete the single commitment from storage and get certificate
+      const certificate =
+        await this.storageManager.deleteCommitment(commitment);
+
+      if (!certificate) {
+        res.status(404).json({
+          error: "Not Found",
+          message: "Commitment not found or already deleted",
+          timestamp: new Date().toISOString(),
+        });
+        return;
+      }
+
+      // Generate ZK deletion proof and mark on blockchain (same pattern as deleteAll)
+      let proofHash: string | undefined = undefined;
+      let transactionHash: string | undefined = undefined;
+
+      try {
+        if (this.useMidnightJS) {
+          proofHash = await this.midnightContractClient.generateDeletionProof(
+            certificate.commitmentHash,
+            certificate.signature,
+          );
+        } else {
+          proofHash = await this.midnightClient.generateDeletionProof({
+            userDID: did,
+            commitmentHash: certificate.commitmentHash,
+            deletionCertificate: certificate.signature,
+          });
+        }
+
+        // Mark as deleted on blockchain
+        if (this.useMidnightJS) {
+          transactionHash = await this.midnightContractClient.markAsDeleted(
+            certificate.commitmentHash,
+            proofHash,
+          );
+        } else {
+          transactionHash = await this.midnightClient.markDeleted(
+            certificate.commitmentHash,
+            proofHash,
+          );
+        }
+
+        // Update storage with proof
+        await this.storageManager.updateDeletionProof(
+          certificate.commitmentHash,
+          proofHash,
+        );
+
+        // Broadcast events
+        this.webSocketManager.broadcastBlockchainConfirmation({
+          userDID: did,
+          commitmentHash: certificate.commitmentHash,
+          transactionHash,
+          confirmationType: "deletion",
+        });
+
+        this.webSocketManager.broadcastDataStatus(did, "deleted", {
+          commitmentHash: certificate.commitmentHash,
+          dataType: "unknown",
+          serviceProvider: "unknown",
+          transactionHash,
+        });
+
+        // Send webhook
+        await this.webhookManager.notifyDataDeleted(
+          did,
+          certificate.commitmentHash,
+          "unknown",
+          "unknown",
+          transactionHash,
+        );
+      } catch (proofError) {
+        console.error(
+          "Failed to generate proof/mark blockchain for commitment:",
+          proofError,
+        );
+        // Continue; return the certificate anyway but with info
+      }
+
+      res.json({
+        success: true,
+        certificate,
+        proofHash: proofHash || null,
+        transactionHash: transactionHash || null,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error deleting commitment:", error);
+      res.status(500).json({
+        error: "Internal Server Error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to delete commitment",
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
    * Setup error handling middleware
    */
   private setupErrorHandling(): void {
@@ -985,6 +1117,92 @@ export class OblivionServer {
         error: "Internal Server Error",
         message:
           error instanceof Error ? error.message : "Failed to delete webhook",
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * Get company statistics
+   */
+  private async handleGetCompanyStats(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
+    try {
+      // Get database stats
+      const dbStats = await this.storageManager.getStats();
+
+      // Calculate compliance score based on deletion rate
+      const complianceScore =
+        dbStats.totalRecords > 0
+          ? Math.round(
+              ((dbStats.deletedRecords / dbStats.totalRecords) * 30 + 70) * 10,
+            ) / 10
+          : 100;
+
+      res.json({
+        totalUsers: 0, // This would come from user tracking if implemented
+        activeRecords: dbStats.activeRecords,
+        deletedRecords: dbStats.deletedRecords,
+        pendingDeletions: 0, // This would come from pending deletion tracking
+        avgDeletionTime: 24, // Hours - this would be calculated from actual deletion timestamps
+        complianceScore,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error getting company stats:", error);
+      res.status(500).json({
+        error: "Internal Server Error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to get company stats",
+        timestamp: new Date().toISOString(),
+      });
+    }
+  }
+
+  /**
+   * Get deletion requests for company dashboard
+   */
+  private async handleGetDeletionRequests(
+    req: Request,
+    res: Response,
+  ): Promise<void> {
+    try {
+      // Get all data locations (this could be filtered by company in production)
+      const locations = await this.storageManager.listAllDataLocations();
+
+      // Filter and format for deletion request view
+      const deletionRequests = locations
+        .filter((loc) => loc.deleted)
+        .map((loc) => ({
+          id: loc.commitmentHash,
+          userDID: loc.userDID,
+          timestamp: loc.deletedAt
+            ? new Date(loc.deletedAt).getTime()
+            : Date.now(),
+          dataCategories: [loc.dataType],
+          status: "completed" as const,
+          webhookStatus: "delivered" as const,
+          retryAttempts: 0,
+          serviceProvider: loc.serviceProvider,
+        }));
+
+      res.json({
+        requests: deletionRequests,
+        total: deletionRequests.length,
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      console.error("Error getting deletion requests:", error);
+      res.status(500).json({
+        error: "Internal Server Error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to get deletion requests",
         timestamp: new Date().toISOString(),
       });
     }

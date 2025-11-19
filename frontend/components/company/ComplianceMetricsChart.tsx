@@ -44,15 +44,24 @@ export function ComplianceMetricsChart({
         date.setMonth(date.getMonth() - (11 - i));
       }
 
+      // Generate realistic data with good visibility
+      const baseRequests = 15;
+      const requestVariation = Math.floor(Math.random() * 10);
+      const requests = baseRequests + requestVariation;
+      const completed = Math.max(
+        requests - Math.floor(Math.random() * 3),
+        Math.floor(requests * 0.9),
+      );
+
       data.push({
         date: date.toLocaleDateString("en-US", {
           month: "short",
           day: dateRange === "1y" ? undefined : "numeric",
         }),
-        requests: Math.floor(Math.random() * 20) + 5,
-        completed: Math.floor(Math.random() * 18) + 5,
-        avgResponseTime: Math.floor(Math.random() * 10) + 5,
-        proofGenTime: Math.floor(Math.random() * 5) + 10,
+        requests,
+        completed,
+        avgResponseTime: Math.floor(Math.random() * 8) + 6, // 6-14 hours
+        proofGenTime: Math.floor(Math.random() * 4) + 10, // 10-14 seconds
       });
     }
 
@@ -64,7 +73,7 @@ export function ComplianceMetricsChart({
   return (
     <div className="grid md:grid-cols-2 gap-6">
       {/* Deletion Requests Over Time */}
-      <div className="p-6 rounded-lg bg-secondary/30 border border-border">
+      <div className="p-6 rounded-lg bg-card border border-border">
         <h3 className="text-lg font-semibold text-foreground mb-4">
           Deletion Requests
         </h3>
@@ -72,46 +81,54 @@ export function ComplianceMetricsChart({
           <BarChart data={data}>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="hsl(var(--border))"
-              opacity={0.3}
+              stroke="rgba(255, 255, 255, 0.1)"
+              opacity={0.5}
             />
             <XAxis
               dataKey="date"
-              stroke="hsl(var(--foreground))"
+              stroke="rgba(255, 255, 255, 0.5)"
               style={{ fontSize: "12px" }}
-              tick={{ fill: "hsl(var(--foreground))" }}
+              tick={{ fill: "rgba(255, 255, 255, 0.7)" }}
             />
             <YAxis
-              stroke="hsl(var(--foreground))"
+              stroke="rgba(255, 255, 255, 0.5)"
               style={{ fontSize: "12px" }}
-              tick={{ fill: "hsl(var(--foreground))" }}
+              tick={{ fill: "rgba(255, 255, 255, 0.7)" }}
+              domain={[0, "auto"]}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
+                backgroundColor: "rgba(0, 0, 0, 0.9)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
                 borderRadius: "8px",
-                color: "hsl(var(--foreground))",
+                color: "#fff",
               }}
-              labelStyle={{ color: "hsl(var(--foreground))" }}
+              labelStyle={{ color: "#fff" }}
             />
-            <Legend wrapperStyle={{ color: "hsl(var(--foreground))" }} />
+            <Legend
+              wrapperStyle={{
+                color: "#fff",
+                paddingTop: "20px",
+              }}
+            />
             <Bar
               dataKey="requests"
-              fill="hsl(var(--primary))"
+              fill="#22d3ee"
               name="Total Requests"
+              radius={[4, 4, 0, 0]}
             />
             <Bar
               dataKey="completed"
-              fill="hsl(var(--accent))"
+              fill="#34d399"
               name="Completed"
+              radius={[4, 4, 0, 0]}
             />
           </BarChart>
         </ResponsiveContainer>
       </div>
 
       {/* Response Time Trend */}
-      <div className="p-6 rounded-lg bg-secondary/30 border border-border">
+      <div className="p-6 rounded-lg bg-card border border-border">
         <h3 className="text-lg font-semibold text-foreground mb-4">
           Response Time (hours)
         </h3>
@@ -119,51 +136,59 @@ export function ComplianceMetricsChart({
           <LineChart data={data}>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="hsl(var(--border))"
-              opacity={0.3}
+              stroke="rgba(255, 255, 255, 0.1)"
+              opacity={0.5}
             />
             <XAxis
               dataKey="date"
-              stroke="hsl(var(--foreground))"
+              stroke="rgba(255, 255, 255, 0.5)"
               style={{ fontSize: "12px" }}
-              tick={{ fill: "hsl(var(--foreground))" }}
+              tick={{ fill: "rgba(255, 255, 255, 0.7)" }}
             />
             <YAxis
-              stroke="hsl(var(--foreground))"
+              stroke="rgba(255, 255, 255, 0.5)"
               style={{ fontSize: "12px" }}
-              tick={{ fill: "hsl(var(--foreground))" }}
+              tick={{ fill: "rgba(255, 255, 255, 0.7)" }}
+              domain={[0, "auto"]}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
+                backgroundColor: "rgba(0, 0, 0, 0.9)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
                 borderRadius: "8px",
-                color: "hsl(var(--foreground))",
+                color: "#fff",
               }}
-              labelStyle={{ color: "hsl(var(--foreground))" }}
+              labelStyle={{ color: "#fff" }}
             />
-            <Legend wrapperStyle={{ color: "hsl(var(--foreground))" }} />
+            <Legend
+              wrapperStyle={{
+                color: "#fff",
+                paddingTop: "20px",
+              }}
+            />
             <Line
               type="monotone"
               dataKey="avgResponseTime"
-              stroke="hsl(var(--primary))"
-              strokeWidth={2}
+              stroke="#22d3ee"
+              strokeWidth={3}
               name="Avg Response Time"
+              dot={{ fill: "#22d3ee", r: 4 }}
+              activeDot={{ r: 6 }}
             />
           </LineChart>
         </ResponsiveContainer>
-        <div className="mt-4 p-3 rounded-lg bg-background/50 border border-border">
+        <div className="mt-4 p-3 rounded-lg bg-muted/50 border border-border">
           <div className="text-xs text-muted-foreground mb-1">
             GDPR Requirement
           </div>
-          <div className="text-sm text-foreground">
+          <div className="text-sm text-foreground font-medium">
             Must respond within 30 days (720 hours)
           </div>
         </div>
       </div>
 
       {/* Proof Generation Time */}
-      <div className="p-6 rounded-lg bg-secondary/30 border border-border md:col-span-2">
+      <div className="p-6 rounded-lg bg-card border border-border md:col-span-2">
         <h3 className="text-lg font-semibold text-foreground mb-4">
           Proof Generation Time (seconds)
         </h3>
@@ -171,36 +196,44 @@ export function ComplianceMetricsChart({
           <LineChart data={data}>
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="hsl(var(--border))"
-              opacity={0.3}
+              stroke="rgba(255, 255, 255, 0.1)"
+              opacity={0.5}
             />
             <XAxis
               dataKey="date"
-              stroke="hsl(var(--foreground))"
+              stroke="rgba(255, 255, 255, 0.5)"
               style={{ fontSize: "12px" }}
-              tick={{ fill: "hsl(var(--foreground))" }}
+              tick={{ fill: "rgba(255, 255, 255, 0.7)" }}
             />
             <YAxis
-              stroke="hsl(var(--foreground))"
+              stroke="rgba(255, 255, 255, 0.5)"
               style={{ fontSize: "12px" }}
-              tick={{ fill: "hsl(var(--foreground))" }}
+              tick={{ fill: "rgba(255, 255, 255, 0.7)" }}
+              domain={[0, "auto"]}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "hsl(var(--card))",
-                border: "1px solid hsl(var(--border))",
+                backgroundColor: "rgba(0, 0, 0, 0.9)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
                 borderRadius: "8px",
-                color: "hsl(var(--foreground))",
+                color: "#fff",
               }}
-              labelStyle={{ color: "hsl(var(--foreground))" }}
+              labelStyle={{ color: "#fff" }}
             />
-            <Legend wrapperStyle={{ color: "hsl(var(--foreground))" }} />
+            <Legend
+              wrapperStyle={{
+                color: "#fff",
+                paddingTop: "20px",
+              }}
+            />
             <Line
               type="monotone"
               dataKey="proofGenTime"
-              stroke="hsl(var(--accent))"
-              strokeWidth={2}
+              stroke="#a78bfa"
+              strokeWidth={3}
               name="ZK Proof Generation"
+              dot={{ fill: "#a78bfa", r: 4 }}
+              activeDot={{ r: 6 }}
             />
           </LineChart>
         </ResponsiveContainer>

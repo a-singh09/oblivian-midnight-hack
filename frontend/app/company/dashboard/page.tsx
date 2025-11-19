@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useCompany } from "@/contexts/CompanyContext";
 import {
   Users,
@@ -11,18 +11,115 @@ import {
   CheckCircle,
   AlertCircle,
   RefreshCw,
+  Package,
 } from "lucide-react";
 import { CompanyAuthGate } from "@/components/company/CompanyAuthGate";
 import { BlockchainMetrics } from "@/components/company/BlockchainMetrics";
+import { apiClient } from "@/lib/api-client";
+import type { DataLocation } from "@/lib/api-client";
 
 export default function CompanyDashboardPage() {
   const { stats, loading, error, refreshStats, apiKey } = useCompany();
+  const [demoUserData, setDemoUserData] = useState<DataLocation[]>([]);
+  const [loadingDemoData, setLoadingDemoData] = useState(false);
+  const [deletingRecords, setDeletingRecords] = useState<Set<string>>(
+    new Set(),
+  );
+  const [deleteSuccess, setDeleteSuccess] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     if (apiKey) {
       refreshStats();
+      loadDemoUserData();
     }
   }, [apiKey]);
+
+  const loadDemoUserData = async () => {
+    setLoadingDemoData(true);
+    try {
+      const data = await apiClient.getDemoUserData();
+      setDemoUserData(data);
+    } catch (err) {
+      console.error("Failed to load demo user data:", err);
+    } finally {
+      setLoadingDemoData(false);
+    }
+  };
+
+  const handleDeleteRecord = async (record: DataLocation) => {
+    // Clear previous messages
+    setDeleteSuccess(null);
+    setDeleteError(null);
+
+    // Add to deleting set
+    setDeletingRecords((prev) => new Set(prev).add(record.commitmentHash));
+
+    try {
+      const demoUserDID = "did:midnight:demo_user_123";
+      await apiClient.deleteCommitment(demoUserDID, record.commitmentHash);
+
+      setDeleteSuccess(
+        `Successfully deleted ${record.dataType} from ${record.serviceProvider}`,
+      );
+
+      // Refresh the data after successful deletion
+      setTimeout(() => {
+        loadDemoUserData();
+        refreshStats();
+        setDeleteSuccess(null);
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to delete record:", err);
+      setDeleteError(
+        err instanceof Error ? err.message : "Failed to delete record",
+      );
+      setTimeout(() => setDeleteError(null), 5000);
+    } finally {
+      // Remove from deleting set
+      setDeletingRecords((prev) => {
+        const newSet = new Set(prev);
+        newSet.delete(record.commitmentHash);
+        return newSet;
+      });
+    }
+  };
+
+  const handleDeleteAllRecords = async () => {
+    if (
+      !confirm(
+        "Are you sure you want to delete all active records for this user? This action cannot be undone.",
+      )
+    ) {
+      return;
+    }
+
+    // Clear previous messages
+    setDeleteSuccess(null);
+    setDeleteError(null);
+
+    try {
+      const demoUserDID = "did:midnight:demo_user_123";
+      const result = await apiClient.deleteAllUserData(demoUserDID);
+
+      setDeleteSuccess(
+        `Successfully deleted ${result.deletedCount} records with ${result.blockchainProofs.length} blockchain proofs`,
+      );
+
+      // Refresh the data after successful deletion
+      setTimeout(() => {
+        loadDemoUserData();
+        refreshStats();
+        setDeleteSuccess(null);
+      }, 3000);
+    } catch (err) {
+      console.error("Failed to delete all records:", err);
+      setDeleteError(
+        err instanceof Error ? err.message : "Failed to delete all records",
+      );
+      setTimeout(() => setDeleteError(null), 5000);
+    }
+  };
 
   if (!apiKey) {
     return <CompanyAuthGate />;
@@ -73,7 +170,7 @@ export default function CompanyDashboardPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/30 flex items-start gap-3">
             <AlertCircle
-              className="text-destructive flex-shrink-0 mt-0.5"
+              className="text-destructive shrink-0 mt-0.5"
               size={20}
             />
             <div>
@@ -283,6 +380,241 @@ export default function CompanyDashboardPage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* Demo User Data - Hackathon Demo */}
+      <section className="border-b border-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-semibold text-foreground">
+                Users' Data
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Live deletion data for{" "}
+                <span className="font-mono text-primary">users</span>
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleDeleteAllRecords}
+                disabled={
+                  loadingDemoData ||
+                  demoUserData.filter((d) => !d.deleted).length === 0
+                }
+                className="flex items-center gap-2 px-4 py-2 bg-destructive/20 hover:bg-destructive/30 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-destructive"
+              >
+                <Trash2 size={16} />
+                <span className="text-sm font-medium">Delete All Active</span>
+              </button>
+              <button
+                onClick={loadDemoUserData}
+                disabled={loadingDemoData}
+                className="flex items-center gap-2 px-4 py-2 bg-primary/20 hover:bg-primary/30 rounded-lg transition-colors disabled:opacity-50 text-primary"
+              >
+                <RefreshCw
+                  size={16}
+                  className={loadingDemoData ? "animate-spin" : ""}
+                />
+                <span className="text-sm font-medium">Refresh Data</span>
+              </button>
+            </div>
+          </div>
+
+          {loadingDemoData && demoUserData.length === 0 ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <RefreshCw
+                  className="animate-spin text-primary mx-auto mb-4"
+                  size={32}
+                />
+                <p className="text-muted-foreground">
+                  Loading demo user data...
+                </p>
+              </div>
+            </div>
+          ) : demoUserData.length === 0 ? (
+            <div className="p-8 rounded-lg bg-secondary/30 border border-border text-center">
+              <Package
+                className="mx-auto mb-4 text-muted-foreground"
+                size={48}
+              />
+              <p className="text-muted-foreground">
+                No data found for demo user. Try creating some data first!
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Success/Error Messages */}
+              {deleteSuccess && (
+                <div className="mb-4 p-4 rounded-lg bg-accent/10 border border-accent/30 flex items-start gap-3">
+                  <CheckCircle
+                    className="text-accent shrink-0 mt-0.5"
+                    size={20}
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">
+                      Success!
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      {deleteSuccess}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {deleteError && (
+                <div className="mb-4 p-4 rounded-lg bg-destructive/10 border border-destructive/30 flex items-start gap-3">
+                  <AlertCircle
+                    className="text-destructive shrink-0 mt-0.5"
+                    size={20}
+                  />
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Error</p>
+                    <p className="text-sm text-muted-foreground">
+                      {deleteError}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Summary Stats */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="p-4 rounded-lg bg-primary/10 border border-primary/30">
+                  <div className="text-2xl font-bold text-primary mb-1">
+                    {demoUserData.length}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Total Records
+                  </div>
+                </div>
+                <div className="p-4 rounded-lg bg-accent/10 border border-accent/30">
+                  <div className="text-2xl font-bold text-accent mb-1">
+                    {demoUserData.filter((d) => !d.deleted).length}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Active Records
+                  </div>
+                </div>
+                <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/30">
+                  <div className="text-2xl font-bold text-destructive mb-1">
+                    {demoUserData.filter((d) => d.deleted).length}
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    Deleted Records
+                  </div>
+                </div>
+              </div>
+
+              {/* Data Records Table */}
+              <div className="rounded-lg border border-border overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-secondary/50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Service Provider
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Data Type
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Commitment Hash
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Created At
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-secondary/20 divide-y divide-border">
+                      {demoUserData.map((record, idx) => (
+                        <tr
+                          key={record.commitmentHash}
+                          className="hover:bg-secondary/40 transition-colors"
+                        >
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              <Database size={16} className="text-primary" />
+                              <span className="text-sm font-medium text-foreground">
+                                {record.serviceProvider}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <span className="text-sm text-foreground">
+                              {record.dataType}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">
+                            <code className="text-xs text-muted-foreground bg-secondary/50 px-2 py-1 rounded font-mono">
+                              {record.commitmentHash.substring(0, 16)}...
+                            </code>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <span className="text-sm text-muted-foreground">
+                              {new Date(record.createdAt).toLocaleDateString()}{" "}
+                              {new Date(record.createdAt).toLocaleTimeString()}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            {record.deleted ? (
+                              <span className="inline-flex items-center gap-1 text-xs font-semibold text-destructive bg-destructive/20 px-3 py-1 rounded-full">
+                                <Trash2 size={12} />
+                                DELETED
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 text-xs font-semibold text-accent bg-accent/20 px-3 py-1 rounded-full">
+                                <CheckCircle size={12} />
+                                ACTIVE
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-right">
+                            {!record.deleted ? (
+                              <button
+                                onClick={() => handleDeleteRecord(record)}
+                                disabled={deletingRecords.has(
+                                  record.commitmentHash,
+                                )}
+                                className="inline-flex items-center gap-2 px-3 py-1.5 bg-destructive/10 hover:bg-destructive/20 text-destructive rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                                title="Delete this data record"
+                              >
+                                {deletingRecords.has(record.commitmentHash) ? (
+                                  <>
+                                    <RefreshCw
+                                      size={14}
+                                      className="animate-spin"
+                                    />
+                                    Deleting...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Trash2 size={14} />
+                                    Delete
+                                  </>
+                                )}
+                              </button>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">
+                                Already deleted
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </section>
 

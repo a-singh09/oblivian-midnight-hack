@@ -41,21 +41,27 @@ if [ ! -f ".env" ]; then
     echo ""
 fi
 
-# Step 4: Test database connection
-echo -e "${BLUE}🔍 Testing database connection...${NC}"
-psql "<ENTER_POSTGRESQL_URL>" -c "SELECT 1;" > /dev/null 2>&1
+# Step 4: Load database URL from .env
+if [ -f ".env" ]; then
+    export $(grep -v '^#' .env | grep DATABASE_URL | xargs)
+fi
 
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✅ Database connection successful${NC}"
-    echo ""
-    
-    # Step 5: Ask if user wants to set up database
-    echo -e "${YELLOW}Would you like to set up the database tables? (y/n)${NC}"
-    read -r setup_db
-    
-    if [ "$setup_db" = "y" ] || [ "$setup_db" = "Y" ]; then
-        echo -e "${BLUE}📊 Setting up database tables...${NC}"
-        psql "<ENTER_POSTGRESQL_URL>" -f setup-database.sql
+# Test database connection (if DATABASE_URL is set)
+if [ -n "$DATABASE_URL" ]; then
+    echo -e "${BLUE}🔍 Testing database connection...${NC}"
+    psql "$DATABASE_URL" -c "SELECT 1;" > /dev/null 2>&1
+
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}✅ Database connection successful${NC}"
+        echo ""
+        
+        # Step 5: Ask if user wants to set up database
+        echo -e "${YELLOW}Would you like to set up the database tables? (y/n)${NC}"
+        read -r setup_db
+        
+        if [ "$setup_db" = "y" ] || [ "$setup_db" = "Y" ]; then
+            echo -e "${BLUE}📊 Setting up database tables...${NC}"
+            psql "$DATABASE_URL" -f setup-database.sql
         
         if [ $? -eq 0 ]; then
             echo -e "${GREEN}✅ Database tables created${NC}"

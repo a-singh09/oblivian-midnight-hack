@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useCompany } from "@/contexts/CompanyContext";
 import { Building2, Key, ArrowRight } from "lucide-react";
+import Link from "next/link";
 
 export function CompanyAuthGate() {
   const { setApiKey, setCompanyName } = useCompany();
@@ -121,12 +122,12 @@ export function CompanyAuthGate() {
           <p className="text-sm text-muted-foreground mb-2">
             Don't have an API key?
           </p>
-          <a
-            href="/for-companies"
+          <Link
+            href="/company/setup"
             className="text-sm text-primary hover:underline font-medium"
           >
-            Learn about company integration →
-          </a>
+            Get started with integration →
+          </Link>
         </div>
       </div>
     </div>

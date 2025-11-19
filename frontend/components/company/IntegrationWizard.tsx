@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Check, Copy, ExternalLink, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useCompany } from "@/contexts/CompanyContext";
 
 interface WizardStep {
   number: number;
@@ -37,6 +39,9 @@ const steps: WizardStep[] = [
 ];
 
 export function IntegrationWizard() {
+  const router = useRouter();
+  const { setApiKey: setContextApiKey, setCompanyName: setContextCompanyName } =
+    useCompany();
   const [currentStep, setCurrentStep] = useState(1);
   const [apiKey, setApiKey] = useState("");
   const [serviceName, setServiceName] = useState("");
@@ -62,7 +67,21 @@ export function IntegrationWizard() {
       }
 
       const data = await response.json();
-      setApiKey(data.apiKey);
+      const generatedKey = data.apiKey;
+
+      // Save to local state
+      setApiKey(generatedKey);
+
+      // Save to context for app-wide access
+      setContextApiKey(generatedKey);
+      setContextCompanyName(serviceName.trim());
+
+      // Persist to localStorage (client-side only)
+      if (typeof window !== "undefined") {
+        localStorage.setItem("oblivion_api_key", generatedKey);
+        localStorage.setItem("oblivion_company_name", serviceName.trim());
+      }
+
       setCurrentStep(2);
       toast.success("API key generated successfully!");
     } catch (error) {
@@ -445,9 +464,7 @@ await sdk.registerUserData(
             </div>
 
             <div className="flex gap-2 justify-center">
-              <Button
-                onClick={() => (window.location.href = "/company/dashboard")}
-              >
+              <Button onClick={() => router.push("/company/dashboard")}>
                 Go to Dashboard
               </Button>
               <Button variant="outline" onClick={() => setCurrentStep(1)}>

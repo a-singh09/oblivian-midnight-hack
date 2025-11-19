@@ -7,6 +7,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
+import { apiClient } from "@/lib/api-client";
 
 interface CompanyStats {
   totalUsers: number;
@@ -39,39 +40,87 @@ interface CompanyContextType {
   refreshStats: () => Promise<void>;
   refreshDeletionRequests: () => Promise<void>;
   confirmDeletion: (requestId: string) => Promise<void>;
+  logout: () => void;
 }
 
 const CompanyContext = createContext<CompanyContextType | undefined>(undefined);
 
 export function CompanyProvider({ children }: { children: ReactNode }) {
-  const [apiKey, setApiKey] = useState<string | null>(null);
-  const [companyName, setCompanyName] = useState<string | null>(null);
+  const [apiKey, setApiKeyState] = useState<string | null>(null);
+  const [companyName, setCompanyNameState] = useState<string | null>(null);
   const [stats, setStats] = useState<CompanyStats | null>(null);
   const [deletionRequests, setDeletionRequests] = useState<DeletionRequest[]>(
     [],
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
-  // Mock data for now - will be replaced with real API calls
+  // Check if we're on the client side
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Load from localStorage on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const storedApiKey = localStorage.getItem("oblivion_api_key");
+    const storedCompanyName = localStorage.getItem("oblivion_company_name");
+
+    if (storedApiKey) {
+      setApiKeyState(storedApiKey);
+    }
+    if (storedCompanyName) {
+      setCompanyNameState(storedCompanyName);
+    }
+  }, []);
+
+  // Wrapper to also save to localStorage
+  const setApiKey = (key: string) => {
+    setApiKeyState(key);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("oblivion_api_key", key);
+    }
+  };
+
+  const setCompanyName = (name: string) => {
+    setCompanyNameState(name);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("oblivion_company_name", name);
+    }
+  };
+
+  // Fetch real stats from backend
   const refreshStats = async () => {
     setLoading(true);
     setError(null);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Call real API endpoint
+      const stats = await apiClient.getCompanyStats(apiKey || undefined);
 
       setStats({
-        totalUsers: 1247,
-        activeRecords: 3891,
-        deletedRecords: 156,
-        pendingDeletions: 8,
-        avgDeletionTime: 12.5,
-        complianceScore: 98.5,
+        totalUsers: stats.totalUsers || 0,
+        activeRecords: stats.activeRecords || 0,
+        deletedRecords: stats.deletedRecords || 0,
+        pendingDeletions: stats.pendingDeletions || 0,
+        avgDeletionTime: stats.avgDeletionTime || 0,
+        complianceScore: stats.complianceScore || 0,
       });
     } catch (err) {
+      console.error("Failed to fetch company stats:", err);
       setError(err instanceof Error ? err.message : "Failed to fetch stats");
+
+      // Set fallback stats so UI doesn't break
+      setStats({
+        totalUsers: 0,
+        activeRecords: 0,
+        deletedRecords: 0,
+        pendingDeletions: 0,
+        avgDeletionTime: 0,
+        complianceScore: 0,
+      });
     } finally {
       setLoading(false);
     }
@@ -82,35 +131,21 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     setError(null);
 
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Call real API endpoint
+      const requests = await apiClient.getCompanyDeletionRequests(
+        apiKey || undefined,
+      );
 
-      setDeletionRequests([
-        {
-          id: "1",
-          userDID: "did:midnight:user_abc123",
-          timestamp: Date.now() - 3600000,
-          dataCategories: ["profile", "transactions"],
-          status: "pending",
-          webhookStatus: "pending",
-          retryAttempts: 0,
-        },
-        {
-          id: "2",
-          userDID: "did:midnight:user_def456",
-          timestamp: Date.now() - 7200000,
-          dataCategories: ["profile", "orders"],
-          status: "completed",
-          webhookStatus: "delivered",
-          retryAttempts: 0,
-        },
-      ]);
+      setDeletionRequests(requests);
     } catch (err) {
+      console.error("Failed to fetch deletion requests:", err);
       setError(
         err instanceof Error
           ? err.message
           : "Failed to fetch deletion requests",
       );
+      // Set empty array on error
+      setDeletionRequests([]);
     } finally {
       setLoading(false);
     }
@@ -140,6 +175,15 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const logout = () => {
+    setApiKeyState(null);
+    setCompanyNameState(null);
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("oblivion_api_key");
+      localStorage.removeItem("oblivion_company_name");
+    }
+  };
+
   // Load initial data when API key is set
   useEffect(() => {
     if (apiKey) {
@@ -162,6 +206,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         refreshStats,
         refreshDeletionRequests,
         confirmDeletion,
+        logout,
       }}
     >
       {children}

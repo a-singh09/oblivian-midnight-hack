@@ -1,3 +1,5 @@
+"use client";
+
 import { IntegrationWizard } from "@/components/company/IntegrationWizard";
 
 export default function CompanySetupPage() {

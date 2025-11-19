@@ -35,11 +35,16 @@
   --input: oklch(0.15 0 0);
   --ring: oklch(0.52 0.165 185.88);
   /* Teal ring */
-  --chart-1: oklch(0.52 0.165 185.88);
-  --chart-2: oklch(0.55 0.15 190);
-  --chart-3: oklch(0.48 0.12 240);
-  --chart-4: oklch(0.6 0.12 50);
-  --chart-5: oklch(0.5 0.12 270);
+  --chart-1: oklch(0.70 0.20 200);
+  /* Bright cyan for charts */
+  --chart-2: oklch(0.75 0.18 160);
+  /* Bright green for charts */
+  --chart-3: oklch(0.68 0.15 280);
+  /* Bright purple for charts */
+  --chart-4: oklch(0.72 0.18 85);
+  /* Bright yellow for charts */
+  --chart-5: oklch(0.70 0.20 320);
+  /* Bright magenta for charts */
   --radius: 0.625rem;
   --sidebar: oklch(0.12 0 0);
   --sidebar-foreground: oklch(0.95 0 0);
