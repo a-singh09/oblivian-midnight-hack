@@ -9,7 +9,7 @@ import { apiClient } from "@/lib/api-client";
 
 export default function CompanyRegistration() {
   const [formData, setFormData] = useState({
-    userDID: "",
+    userDID: "did:midnight:demo_user_123",
     serviceProvider: "",
     dataType: "",
     data: "",
@@ -63,7 +63,7 @@ export default function CompanyRegistration() {
       // Reset form
       setTimeout(() => {
         setFormData({
-          userDID: "",
+          userDID: "did:midnight:demo_user_123",
           serviceProvider: "",
           dataType: "",
           data: "",
@@ -155,10 +155,11 @@ export default function CompanyRegistration() {
                   }
                   placeholder="did:midnight:..."
                   required
-                  className="w-full px-4 py-2 rounded-lg border border-border bg-background text-foreground focus:border-primary focus:outline-none"
+                  disabled
+                  className="w-full px-4 py-2 rounded-lg border border-border bg-secondary/50 text-foreground focus:border-primary focus:outline-none cursor-not-allowed opacity-75"
                 />
                 <p className="mt-1 text-xs text-muted-foreground">
-                  The user's decentralized identifier on Midnight network
+                  Demo user DID
                 </p>
               </div>
 

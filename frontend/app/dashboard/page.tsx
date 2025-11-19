@@ -14,11 +14,11 @@ import {
 import Link from "next/link";
 import { apiClient, DataLocation } from "@/lib/api-client";
 
-interface ServiceView extends DataLocation {
+interface ServiceView extends Omit<DataLocation, "deletedAt"> {
   id: string;
   emoji?: string;
   lastAccessed?: string;
-  deletedAt?: string | number;
+  deletedAt?: string | number | Date;
 }
 
 export default function Dashboard() {
@@ -208,7 +208,8 @@ export default function Dashboard() {
                 onChange={(e) => setDidInput(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && handleLoadDID()}
                 placeholder="Enter your Midnight DID (e.g., did:midnight:your_id_123)"
-                className="w-full px-4 py-2 rounded-lg bg-secondary border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                disabled
+                className="w-full px-4 py-2 rounded-lg bg-secondary/50 border border-border text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary cursor-not-allowed opacity-75"
               />
             </div>
             <button
@@ -233,11 +234,13 @@ export default function Dashboard() {
           </div>
 
           {/* Helper Text */}
-          <p className="text-xs text-muted-foreground mt-2 px-4">
-            💡 Tip: If you just registered data, paste the DID you used above.
-            Using demo DID:{" "}
+          {/* <p className="text-xs text-muted-foreground mt-2 px-4">
+            💡 Demo DID hardcoded for hackathon:{" "}
+            <span className="font-mono text-primary">
+              did:midnight:demo_user_123
+            </span>{" "}
             {userDID === "did:midnight:demo_user_123" ? "✅" : "❌"}
-          </p>
+          </p> */}
         </div>
       </section>
 
